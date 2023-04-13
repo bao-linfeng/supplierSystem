@@ -23,7 +23,7 @@
                 <table class="table">
                     <thead class="thead">
                         <tr>
-                            <th v-for="(item, index) in theadV" :key="'thead_'+index">{{lan[item]}}</th>
+                            <th v-for="(item, index) in theadV" :key="'thead_'+index" @click="sort(item)">{{lan[item]}} <img v-if="item == '档案时间'" :src="sortType == 'asc' ? asc : sortType == 'desc' ? desc : ''" alt=""></th>
                         </tr>
                     </thead>
                     <tbody class="tbody">
@@ -50,6 +50,8 @@ import { useRoute, useRouter } from 'vue-router';
 import { supplierMS } from '../util/api';
 import { getQueryVariable, getLocalTime, createMsg } from '../util/ADS';
 import PaginationModule from '../components/PaginationModule.vue';
+import asc from '../assets/asc.svg';
+import desc from '../assets/desc.svg';
 
 export default {
     components: {
@@ -67,22 +69,25 @@ export default {
         const { baseURL, userKey, siteKey, lan } = toRefs(useState());
         const router = useRouter();
 
-        const theadV = ref(['谱ID', '姓氏', '谱名', '出版年', '谱籍地', '堂号', '状态', '文件标题', '审核人', '审核时间', '上传机构', '上传时间']);
-        const parameterV = ref(['_key', 'surname', 'genealogyName', 'publish', 'place', 'hall', 'condition', 'fileName', 'checkUserName', 'checkTimeO', 'orgName', 'createTimeO']);
+        const theadV = ref(['谱ID', '姓氏', '谱名', '出版年', '谱籍地', '堂号', '状态', '档案名称', '档案时间', '审核人', '审核时间', '上传机构', '上传时间']);
+        const parameterV = ref(['_key', 'surname', 'genealogyName', 'publish', 'place', 'hall', 'condition', 'Filenames', 'FiletimesO', 'checkUserName', 'checkTimeO', 'orgName', 'createTimeO']);
         const tbody = ref([]);
         const page = ref(1);
         const pages = ref(0);
         const limit = ref(30);
         const total = ref(0);
+        const sortType = ref('auto');
+        const sortField = ref('');
 
         const getDataList = async () => {
 			changePropertyValue('isLoading', true);
-            const result = await supplierMS.monthlySummaryList(props.timeStr, props.condition, props.orgKeyN, page.value, limit.value);
+            const result = await supplierMS.monthlySummaryList(props.timeStr, props.condition, props.orgKeyN, sortField.value, sortType.value, page.value, limit.value);
             changePropertyValue('isLoading', false);
 			if(result.status == 200){
                 tbody.value = result.result.list.map((ele) => {
-                    ele.checkTimeO = ele.checkTime ? getLocalTime(ele.checkTime) : '';
-                    ele.createTimeO = ele.createTime ? getLocalTime(ele.createTime) : '';
+                    ele.checkTimeO = ele.checkTime ? getLocalTime(ele.checkTime, '-', 1) : '';
+                    ele.createTimeO = ele.createTime ? getLocalTime(ele.createTime, '-', 1) : '';
+                    ele.FiletimesO = ele.Filetimes ? getLocalTime(ele.Filetimes, '-', 1) : '';
                     return ele;
                 });
                 pages.value = result.result.pageNum;
@@ -99,12 +104,27 @@ export default {
             getDataList();
         }
 
+        const sort = (data) => {
+            if(data == '档案时间'){
+                sortField.value = 'Filetimes';
+                if(sortType.value == 'auto'){
+                    sortType.value = 'asc';
+                }else if(sortType.value == 'asc'){
+                    sortType.value = 'desc';
+                }else if(sortType.value == 'desc'){
+                    sortType.value = 'auto';
+                    sortField.value = '';
+                }
+                getDataList();
+            }
+        }
+
         onMounted(() => {
             getDataList();
         });
 
         return {
-            close, lan, theadV, parameterV, tbody, page, pages, total, changePage, 
+            close, lan, theadV, parameterV, tbody, page, pages, total, changePage, sort, sortType, sortField, desc, asc,
         }
     }
 }
@@ -189,6 +209,7 @@ export default {
                 padding: 5px 0;
                 min-width: 80px;
                 border: 1px solid #ddd;
+                cursor: pointer;
             }
         }
     }

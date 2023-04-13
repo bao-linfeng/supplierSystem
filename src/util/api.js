@@ -500,11 +500,13 @@ const supplierMS = {
         }
         return request.get('/supplierMS/imageMonthSummaryOrg', param);
     },
-    monthlySummaryList(timeStr, condition, orgKey, page, limit){// 查重月份汇总表明细列表
+    monthlySummaryList(timeStr, condition, orgKey, sortField, sortType, page, limit){// 查重月份汇总表明细列表
         let param = {
             timeStr: timeStr,
             condition: condition,
             orgKey: orgKey,
+            sortField: sortField,
+            sortType: sortType,
             page: page,
             limit: limit,
         }

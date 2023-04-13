@@ -196,7 +196,6 @@ export default {
         const initDownloadExcel = () => {
             let aoa = [];
             aoa.push(theadV.value);
-            // ['englishName', 'allOrgNumber', 'aa', 'bb', 'bbc', 'cc', 'dd', 'ee', 'ff']
             tbody.value.forEach((ele) => {
                 aoa.push([ele.englishName, ele.allOrgNumber, ele.aa, ele.bb, ele.bbc, ele.cc, ele.dd, ele.ee, ele.ff]);
             });

@@ -341,7 +341,7 @@ const EN = {
     '拍数': 'ImgNumber',
     '类别': 'imageType',
     '操作员': 'device',
-    '': '',
+    '档案名称': 'FilesName',
     '': '',
     '': '',
     '': '',
