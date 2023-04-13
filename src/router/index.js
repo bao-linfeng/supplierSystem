@@ -1,0 +1,146 @@
+import { createRouter, createWebHistory } from 'vue-router'
+
+const Home = () => import('../pages/Home.vue');
+const BootPage = () => import('../pages/BootPage.vue');
+const Supplier = () => import('../pages/Supplier.vue');
+const ContractManage = () => import('../pages/ContractManage.vue');
+const GenealogyStatistics = () => import('../pages/GenealogyStatistics.vue');
+const ImageStatistics = () => import('../pages/ImageStatistics.vue');
+const DeviceStatistics = () => import('../pages/DeviceStatistics.vue');
+const MonthGather = () => import('../pages/MonthGather.vue');
+const ImageGather = () => import('../pages/ImageGather.vue');
+const YearGather = () => import('../pages/YearGather.vue');
+const ToBeSettledVolumeList = () => import('../pages/ToBeSettledVolumeList.vue');
+const TakeCameraBillList = () => import('../pages/TakeCameraBillList.vue');
+const TakeCameraBillDetail = () => import('../pages/TakeCameraBillDetail.vue');
+const OrgList = () => import('../pages/OrgList.vue');
+const BaseSet = () => import('../pages/BaseSet.vue');
+const BillApprovalProcess = () => import('../pages/BillApprovalProcess.vue');
+const SystemLog = () => import('../pages/SystemLog.vue');
+const GenealogyMonthReport = () => import('../pages/GenealogyMonthReport.vue');
+const ImagesMonthReport = () => import('../pages/ImagesMonthReport.vue');
+const Bill = () => import('../pages/Bill.vue');
+
+const routes = [
+    { 
+        path: '/', 
+        name: 'BootPage',
+        component: BootPage,
+        props: true,
+    },
+    { 
+        path: '/bill', 
+        name: 'Bill',
+        component: Bill,
+        props: true,
+    },
+    { 
+        path: '/imagesMonthReport', 
+        name: 'imagesMonthReport',
+        component: ImagesMonthReport,
+        props: true,
+    },
+    { 
+        path: '/genealogyMonthReport', 
+        name: 'genealogyMonthReport',
+        component: GenealogyMonthReport,
+        props: true,
+    },
+    { 
+        path: '/supplier', 
+        name: 'supplier',
+        component: Supplier,
+        props: true,
+    },
+    { 
+        path: '/contractManage', 
+        name: 'contractManage',
+        component: ContractManage,
+        props: true,
+    },
+    { 
+        path: '/genealogyStatistics', 
+        name: 'genealogyStatistics',
+        component: GenealogyStatistics,
+        props: true,
+    },
+    { 
+        path: '/imageStatistics', 
+        name: 'imageStatistics',
+        component: ImageStatistics,
+        props: true,
+    },
+    { 
+        path: '/deviceStatistics', 
+        name: 'deviceStatistics',
+        component: DeviceStatistics,
+        props: true,
+    },
+    { 
+        path: '/monthGather', 
+        name: 'monthGather',
+        component: MonthGather,
+        props: true,
+    },
+    { 
+        path: '/imageGather', 
+        name: 'imageGather',
+        component: ImageGather,
+        props: true,
+    },
+    { 
+        path: '/yearGather', 
+        name: 'yearGather',
+        component: YearGather,
+        props: true,
+    },
+    { 
+        path: '/boBeSettledVolumeList', 
+        name: 'boBeSettledVolumeList',
+        component: ToBeSettledVolumeList,
+        props: true,
+    },
+    { 
+        path: '/takeCameraBillList', 
+        name: 'takeCameraBillList',
+        component: TakeCameraBillList,
+        props: true,
+    },
+    { 
+        path: '/takeCameraBillDetail', 
+        name: 'takeCameraBillDetail',
+        component: TakeCameraBillDetail,
+        props: true,
+    },
+    { 
+        path: '/orgList', 
+        name: 'orgList',
+        component: OrgList,
+        props: true,
+    },
+    { 
+        path: '/baseSet', 
+        name: 'baseSet',
+        component: BaseSet,
+        props: true,
+    },
+    { 
+        path: '/billApprovalProcess', 
+        name: 'billApprovalProcess',
+        component: BillApprovalProcess,
+        props: true,
+    },
+    { 
+        path: '/systemLog', 
+        name: 'systemLog',
+        component: SystemLog,
+        props: true,
+    },
+]
+
+const router = createRouter({
+    history: createWebHistory(),
+    routes
+})
+
+export default router
