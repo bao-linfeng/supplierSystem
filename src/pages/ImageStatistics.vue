@@ -56,7 +56,7 @@
 import { ref, reactive, onMounted, watch, watchEffect, computed, provide,readonly, toRefs } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useState, changePropertyValue } from '../store';
-import { getQueryVariable, getLocalTime, downliadLink } from '../util/ADS';
+import { getQueryVariable, getLocalTime, downliadLink, getNowTimestamp, getLastYearTodayTimestamp } from '../util/ADS';
 import { supplierMS, org } from '../util/api';
 import PaginationModule from '../components/PaginationModule.vue';
 
@@ -81,8 +81,8 @@ export default {
 
         const orgList = ref([]);
         const orgKeyN = ref('');
-        const startTime = ref(Date.now() - 1000*60*60*24*30*6);
-        const endTime = ref(Date.now());
+        const startTime = ref('');
+        const endTime = ref('');
         const time = ref('');
         const genealogyName = ref('');
         const catalogKey = ref('');
@@ -194,10 +194,10 @@ export default {
         watch(time, (nv, ov) => {
             if(nv){
                 startTime.value = new Date(nv[0]).getTime();
-                endTime.value = new Date(nv[1]).getTime()+24*60*60*1000;
+                endTime.value = new Date(nv[1]).getTime() + 24*60*60*1000 - 1;
             }else{
-                startTime.value = Date.now() - 1000*60*60*24*30*6;
-                endTime.value = Date.now();
+                startTime.value = getLastYearTodayTimestamp();
+                endTime.value = getNowTimestamp(1) - 1;
             }
             
         });
@@ -216,11 +216,14 @@ export default {
                 orgKeyN.value = orgKey.value;
             }
             
-            if(getQueryVariable('startTime')){
+            if(getQueryVariable('startTime') && getQueryVariable('endTime')){
+                time.value = [Number(getQueryVariable('startTime')), Number(getQueryVariable('endTime')) - 24*60*60*1000 + 1];
                 startTime.value = getQueryVariable('startTime');
-            }
-            if(getQueryVariable('endTime')){
                 endTime.value = getQueryVariable('endTime');
+            }else{
+                time.value = [getLastYearTodayTimestamp(), getNowTimestamp()];
+                startTime.value = getLastYearTodayTimestamp();
+                endTime.value = getNowTimestamp(1) - 1;
             }
             
             getOrgList();
