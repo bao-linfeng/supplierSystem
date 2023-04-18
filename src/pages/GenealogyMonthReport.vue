@@ -5,7 +5,6 @@
                 <el-select v-model="routeType" class="width100">
                     <el-option v-for="item in routeList" :key="item.value" :label="lan[item.label]" :value="item.value" />
                 </el-select>
-                
             </div>
             <h3>{{lan[statisticalLatitudeL]}}</h3>
             <div class="head-right">
@@ -136,7 +135,7 @@ export default {
                         ff.push(ele.ff);
                     }
                 });
-                chartDataO.data.push(all); 
+                // chartDataO.data.push(all); 
                 chartDataO.data.push(aa); 
                 chartDataO.data.push(bb); 
                 chartDataO.data.push(bbc); 

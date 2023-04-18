@@ -207,7 +207,7 @@ export default {
         z-index: 2;
         tr{
             th{
-                padding: 5px 0;
+                padding: 5px 10px;
                 min-width: 80px;
                 border: 1px solid #ddd;
             }
@@ -226,7 +226,7 @@ export default {
                 background: #DBE6CC;
             }
             td{
-                padding: 15px 0;
+                padding: 15px 10px;
                 min-width: 80px;
                 border: 1px solid #ddd;
             }

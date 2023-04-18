@@ -248,6 +248,7 @@ function getNowTimestamp(d = 0){// d = 0 当天、d = 1 明天、d = -1 昨天
     now.setDate(now.getDate() + d);
 
     // 将日期的时间部分设为 0
+    // now.setHours(0, 0, 0, 0);
     now.setHours(0);
     now.setMinutes(0);
     now.setSeconds(0);

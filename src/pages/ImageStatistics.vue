@@ -13,7 +13,7 @@
                     :start-placeholder="lan['开始时间']"
                     :end-placeholder="lan['结束时间']"
                 />
-                <el-select v-model="condition" class="width120" :placeholder="lan['谱审核状态']">
+                <el-select v-model="condition" class="width120" multiple :placeholder="lan['谱审核状态']">
                     <el-option v-for="item in conditionList" :key="item.value" :label="lan[item.label]" :value="item.value" />
                 </el-select>
                 <el-select v-if="userRole >= 1 && userRole <= 3" v-model="orgKeyN" class="width120" :placeholder="lan['机构筛选']">
@@ -89,7 +89,7 @@ export default {
         let returnReasonO = '', conditionO = {'d': '重复', 'r': '无效', 'm': '待议', 'nf': '谱目通过', 'f': '影像通过'};
         const getImageVerifyDetail = async (f = true) => {
 			changePropertyValue('isLoading', true);
-            const result = await supplierMS.getImageVerifyDetail(orgKeyN.value, siteKey.value, genealogyName.value, catalogKey.value, condition.value, startTime.value, endTime.value, status.value.join(','), page.value , limit.value);
+            const result = await supplierMS.getImageVerifyDetail(orgKeyN.value, siteKey.value, genealogyName.value, catalogKey.value, condition.value.join(','), startTime.value, endTime.value, status.value.join(','), page.value , limit.value);
             changePropertyValue('isLoading', false);
 			if(result.status == 200){
                 let imageNumber = 0;
@@ -133,7 +133,7 @@ export default {
                 'siteKey': siteKey.value, 
                 'genealogyName': genealogyName.value, 
                 'catalogKey': catalogKey.value, 
-                'condition': condition.value, 
+                'condition': condition.value.join(','), 
                 'startTime': startTime.value, 
                 'endTime': endTime.value, 
                 'status': status.value.join(','), 
@@ -146,7 +146,7 @@ export default {
         }
 
         const imageVerifyDetailTotal = async () => {
-            const result = await supplierMS.imageVerifyDetailTotal(orgKeyN.value, siteKey.value, genealogyName.value, catalogKey.value, condition.value, startTime.value, endTime.value, status.value.join(','), page.value , limit.value);
+            const result = await supplierMS.imageVerifyDetailTotal(orgKeyN.value, siteKey.value, genealogyName.value, catalogKey.value, condition.value.join(','), startTime.value, endTime.value, status.value.join(','), page.value , limit.value);
             if(result.status == 200){
                 let data = result.data;
                 tbody.value.push({'ProjectID': lan.value['汇总统计'], 'imgNumber': data.imageNumber});
@@ -181,7 +181,7 @@ export default {
             {'label': lan.value['已作废'], 'value': '16'},
         ]);
 
-        const condition = ref('');
+        const condition = ref(['nf', 'f']);
         const conditionList = ref([
             {label: '谱状态', value: ''}, 
             {label: 'd|重复', value: 'd'},
@@ -285,7 +285,7 @@ export default {
         z-index: 2;
         tr{
             th{
-                padding: 5px 0;
+                padding: 5px 10px;
                 min-width: 80px;
                 // max-width: 200px;
                 border: 1px solid #ddd;
@@ -305,7 +305,7 @@ export default {
                 background: #DBE6CC;
             }
             td{
-                padding: 15px 0;
+                padding: 15px 10px;
                 min-width: 80px;
                 // max-width: 200px;
                 border: 1px solid #ddd;

@@ -125,7 +125,7 @@ export default {
                         ff.push(ele.ff);
                     }
                 });
-                chartDataO.data.push(all); 
+                // chartDataO.data.push(all); 
                 chartDataO.data.push(aa); 
                 chartDataO.data.push(bb); 
                 chartDataO.data.push(bbc); 

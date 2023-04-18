@@ -533,7 +533,7 @@ export default {
         z-index: 2;
         tr{
             th{
-                padding: 5px 0;
+                padding: 5px 10px;
                 min-width: 40px;
                 border: 1px solid #ddd;
             }
@@ -561,7 +561,7 @@ export default {
                 }
             }
             td{
-                padding: 15px 5px;
+                padding: 15px 10px;
                 min-width: 40px;
                 border: 1px solid #ddd;
                 .action{

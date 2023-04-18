@@ -18,6 +18,17 @@
                     <label class="label" for="">{{lan['来源状态']}}:</label>
                     <span>{{condition ? condition : lan['全部状态']}}</span>
                 </div>
+                <div class="source-box">
+                    <el-date-picker
+                        class="width260"
+                        v-model="time"
+                        type="daterange"
+                        unlink-panels
+                        :start-placeholder="lan['开始时间']"
+                        :end-placeholder="lan['结束时间']"
+                    />
+                    <el-button type="primary" @click="getDataList">{{lan['检索']}}</el-button>
+                </div>
             </div>
             <div class="module-content style1">
                 <table class="table">
@@ -78,10 +89,24 @@ export default {
         const total = ref(0);
         const sortType = ref('auto');
         const sortField = ref('');
+        const time = ref('');
+        const createStartTime = ref('');
+        const createEndTime = ref('');
+
+        watch(time, (nv, ov) => {
+            if(nv){
+                createStartTime.value = new Date(nv[0]).getTime();
+                createEndTime.value = new Date(nv[1]).getTime() + 24*60*60*1000 - 1;
+            }else{
+                createStartTime.value = '';
+                createEndTime.value = '';
+            }
+            
+        });
 
         const getDataList = async () => {
 			changePropertyValue('isLoading', true);
-            const result = await supplierMS.monthlySummaryList(props.timeStr, props.condition, props.orgKeyN, sortField.value, sortType.value, page.value, limit.value);
+            const result = await supplierMS.monthlySummaryList(props.timeStr, createStartTime.value, createEndTime.value, props.condition, props.orgKeyN, sortField.value, sortType.value, page.value, limit.value);
             changePropertyValue('isLoading', false);
 			if(result.status == 200){
                 tbody.value = result.result.list.map((ele) => {
@@ -125,6 +150,7 @@ export default {
 
         return {
             close, lan, theadV, parameterV, tbody, page, pages, total, changePage, sort, sortType, sortField, desc, asc,
+            time, getDataList,
         }
     }
 }
@@ -174,7 +200,7 @@ export default {
     .source-box{
         display: flex;
         align-items: center;
-        margin-right: 100px;
+        margin-right: 40px;
         .label{
             margin-right: 10px;
         }
@@ -262,5 +288,8 @@ export default {
     .marginR10{
         margin: 0 5px;
     }
+}
+.width260{
+    width: 260px !important;
 }
 </style>

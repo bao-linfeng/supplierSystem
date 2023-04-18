@@ -42,7 +42,7 @@ export default {
             context.emit('close', false);
         }
 
-        const chartType = ref('line');
+        const chartType = ref('bar');
         let adaiChart = '';
         let ctx = '';
         const chartData = ref({});
