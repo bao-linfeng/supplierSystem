@@ -361,7 +361,7 @@ export default {
                     if(ele.userKey == userKey.value && ele.waitApproval == 1){
                         isShow.value = false;
                     }
-                    ele.waitApprovalO = ele.waitApproval === 0 ? '待审批' : ele.waitApproval === 1 ? '审批中' : ele.waitApproval === 2 ? '审批通过' : ele.waitApproval === 3 ? '已驳回' : ''; 
+                    ele.waitApprovalO = ele.waitApproval === 0 ? lan.value['待审批'] : ele.waitApproval === 1 ? lan.value['审批中'] : ele.waitApproval === 2 ? lan.value['审批通过'] : ele.waitApproval === 3 ? lan.value['已驳回'] : ''; 
                     ele.approvalTimeO = ele.approvalTime ? getLocalTime(ele.approvalTime, '-', 1) : '';
                     return ele;
                 });

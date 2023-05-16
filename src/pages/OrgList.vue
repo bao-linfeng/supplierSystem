@@ -86,7 +86,7 @@ export default {
             if(result.status == 200){
                 if(f){
                     tbody.value = result.data.map((ele) => {
-                        ele.type = '拍机机构';
+                        ele.type = lan.value['拍机机构'];
                         return ele;
                     });
                 }else{
@@ -97,7 +97,7 @@ export default {
                     });
                     orgList.value.unshift({'label': lan.value['全部机构'], 'value': ''});
                     tbody.value = result.data.map((ele) => {
-                        ele.type = '拍机机构';
+                        ele.type = lan.value['拍机机构'];
                         return ele;
                     });
                 }

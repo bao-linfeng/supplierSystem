@@ -146,7 +146,7 @@ export default {
                 summaryInfo.value = result.data.summaryInfo.map((ele) => {
                     ele.ProjectID = BillDetail.value.ProjectID || '';
                     ele.time = ele.weekStart+'~'+ele.weekEnd;
-                    ele.isLeadImagesO = ele.isLeadImages == 1 ? '是' : '否';
+                    ele.isLeadImagesO = ele.isLeadImages == 1 ? lan.value['是'] : lan['否'];
                     ele.summaryAmountO = '$'+ele.summaryAmount;
                     return ele;
                 });

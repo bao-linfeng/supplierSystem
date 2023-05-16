@@ -108,13 +108,13 @@ export default {
                         ele.returnReasonO = returnReasonO;
                         returnReasonO = '';
                     }
-                    ele.condition = ele.condition+'|'+conditionO[ele.condition];
+                    ele.condition = ele.condition;//+'|'+conditionO[ele.condition]
                     imageNumber = imageNumber + ele.imgNumber;
 
-                    ele.orgName = ele.orgName + '|' + ele.organizationNo;
+                    ele.orgName = lan.value[ele.orgName] + '|' + ele.organizationNo;
                     ele.passTime = ele.passTime ? getLocalTime(ele.passTime, '-', 1) : '';
                     ele.createTime = ele.createTime ? getLocalTime(ele.createTime, '-', 1) : '';
-                    ele.singleOrTwo = ele.singleOrTwo == '2' ? '双拍' : ele.singleOrTwo == '1' ? '单拍' : '';
+                    ele.singleOrTwo = ele.singleOrTwo == '2' ? lan.value['双拍'] : ele.singleOrTwo == '1' ? lan.value['单拍'] : '';
                     ele.statusO = ele.takeStatus >= 7 && ele.takeStatus <= 9 ? lan.value['通过'] : ele.takeStatus == 12 ? lan.value['机构审核'] : ele.takeStatus == 5 ? lan.value['微站初审'] : ele.takeStatus == 13 ? lan.value['微站复审'] : ele.takeStatus == 14 ? lan.value['微站待议'] : ele.takeStatus == 6 ? lan.value['打回'] : ele.takeStatus == 16 ? lan.value['作废'] : '';
                     return ele;
                 });

@@ -15,16 +15,16 @@
                     style="width: 100%">
                         <el-table-column
                             prop="userName"
-                            label="账号"
+                            :label="lan['账号']"
                             width="180">
                         </el-table-column>
                         <el-table-column
                             prop="settlementActionO"
-                            label="操作内容">
+                            :label="lan['操作内容']">
                         </el-table-column>
                         <el-table-column
                             prop="timeO"
-                            label="日期"
+                            :label="lan['日期']"
                             width="180">
                         </el-table-column>
                 </el-table>
@@ -37,21 +37,21 @@
                     style="width: 100%">
                         <el-table-column
                             prop="orgName"
-                            label="机构"
+                            :label="lan['机构']"
                             width="100">
                         </el-table-column>
                         <el-table-column
                             prop="userName"
-                            label="账号"
+                            :label="lan['账号']"
                             width="100">
                         </el-table-column>
                         <el-table-column
                             prop="logO"
-                            label="操作内容">
+                            :label="lan['操作内容']">
                         </el-table-column>
                         <el-table-column
                             prop="timeO"
-                            label="日期"
+                            :label="lan['日期']"
                             width="180">
                         </el-table-column>
                 </el-table>
@@ -78,7 +78,7 @@ export default {
         const { userKey, siteKey, code, drive, device, lan } = toRefs(useState());
         const router = useRouter();
 
-        const navList = ref([{'label': '卷册状态改动记录', 'value': '1'}, {'label': '卷册信息改动记录', 'value': '2'}]);
+        const navList = ref([{'label': lan.value['卷册状态改动记录'], 'value': '1'}, {'label': lan.value['卷册信息改动记录'], 'value': '2'}]);
         const nav = ref('1');
         // 切换导航
         const changeNav = (i) => {

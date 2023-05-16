@@ -2,30 +2,30 @@
     <div class="edit-wrap">
         <div class="edit-box">
             <div class="edit-head">
-                <h3 class="title">卷册状态修改</h3>
+                <h3 class="title">{{lan['卷册状态修改']}}</h3>
             </div>
-            <div class="log">当前卷册:{{detail.genealogyName}} {{detail.volumeNumber}}</div>
-            <div class="log">卷ID: {{detail.volumeKey}}</div>
+            <div class="log">{{lan['当前卷册']}}: {{detail.genealogyName}} {{detail.volumeNumber}}</div>
+            <div class="log">{{lan['卷ID']}}: {{detail.volumeKey}}</div>
             <ul class="edit-content">
 				<li>
 				    <span class="label">{{lan['电子谱']}}</span>
 					<el-radio-group v-model="isLeadImages">
-                        <el-radio :label="0">否</el-radio>
-                        <el-radio :label="1">是</el-radio>
+                        <el-radio :label="0">{{lan['否']}}</el-radio>
+                        <el-radio :label="1">{{lan['是']}}</el-radio>
                     </el-radio-group>
 				</li>
                 <li>
                     <span class="label">{{lan['单双拍']}}</span>
                     <el-radio-group v-model="singleOrTwo">
-                        <el-radio :label="1">单拍</el-radio>
-                        <el-radio :label="2">双拍</el-radio>
+                        <el-radio :label="1">{{lan['单拍']}}</el-radio>
+                        <el-radio :label="2">{{lan['双拍']}}</el-radio>
                     </el-radio-group>
                 </li>
 				<li v-if="settlementStatus == 'toBeSettled' || settlementStatus == 'nonSettlement'">
 				    <span class="label">{{lan['结算状态']}}</span>
 				    <el-radio-group v-model="settlementStatus">
-                        <el-radio :label="'toBeSettled'">待结算</el-radio>
-                        <el-radio :label="'nonSettlement'">不可结算</el-radio>
+                        <el-radio :label="'toBeSettled'">{{lan['待结算']}}</el-radio>
+                        <el-radio :label="'nonSettlement'">{{lan['不可结算']}}</el-radio>
                     </el-radio-group>
 				</li>
             </ul>

@@ -10,7 +10,7 @@
                     <h3 class="title">{{lan['发票信息概要']}}</h3>
                     <div class="bill-box">
                         <p>{{lan['发票编码']}}: {{detail.billNo}}</p>
-                        <p>{{lan['所属机构']}}: {{detail.orgName}}</p>
+                        <p>{{lan['所属机构']}}: {{lan[detail.orgName]}}</p>
                         <p>{{lan['影像页数']}}: {{detail.totalImgNumber}}</p>
                         <p>{{lan['合计金额']}}: ${{detail.totalAmount}}</p>
                     </div>

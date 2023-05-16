@@ -29,7 +29,7 @@
                                 <td>{{item.singleOrTwoO}}</td>
                                 <td>{{item.isLeadImagesO}}</td>
                                 <td>{{item.priceO}}</td>
-                                <td>{{item.orgName}}</td>
+                                <td>{{lan[item.orgName]}}</td>
                                 <td v-if="userRole >= 1 && userRole <= 2">
                                     <button class="btn marginR10" @click="editData(item, 1)">{{lan['编辑']}}</button>
                                     <button class="btn" @click="deleteData(item._key, 1)">{{lan['删除']}}</button>
