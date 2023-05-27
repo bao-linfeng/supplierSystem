@@ -103,7 +103,7 @@ export default {
         const router = useRouter();
         const id = props.id;
 
-        const theadV = ref(['checkAll', '机构名称', '上传时间', '谱ID', '谱名', '卷ID', '卷名', '结算页数', '单双拍','电子谱', '结算单价', '结算金额', '审核状态', '结算状态', '审核人', '审核时间']);
+        const theadV = ref(['checkAll', '机构名称', '提交时间', '谱ID', '谱名', '卷ID', '卷名', '结算页数', '单双拍','电子谱', '结算单价', '结算金额', '审核状态', '结算状态', '审核人', '审核时间']);
         const parameterV = ref(['checkAll', 'orgName', 'submitTimeO', 'gcKey', 'genealogyName', 'volumeKey', 'volumeNumber', 'imgNumber', 'singleOrTwoO', 'isLeadImagesO', 'priceO', 'amount', 'takeStatusO', 'settlementStatusO', 'userName', 'passTimeO']);
 
         const page = ref(1);
@@ -385,12 +385,12 @@ export default {
 
         onMounted(() => {
             if(userRole.value >= 1 && userRole.value <= 3){
-                theadV.value = ['checkAll', '机构名称', '上传时间', '谱ID', '谱名', '卷ID', '卷名', '结算页数', '单双拍','电子谱', '结算单价', '结算金额', '审核状态', '结算状态', '审核人', '审核时间', '操作'];
+                theadV.value = ['checkAll', '机构名称', '提交时间', '谱ID', '谱名', '卷ID', '卷名', '结算页数', '单双拍','电子谱', '结算单价', '结算金额', '审核状态', '结算状态', '审核人', '审核时间', '操作'];
                 parameterV.value = ['checkAll', 'orgName', 'submitTimeO', 'gcKey', 'genealogyName', 'volumeKey', 'volumeNumber', 'imgNumber', 'singleOrTwoO', 'isLeadImagesO', 'priceO', 'amount', 'takeStatusO', 'settlementStatusO', 'userName', 'passTimeO', 'action'];
             }else{
                 orgKeyN.value = orgKey.value;
                 if(admin.value == 'admin'){
-                    theadV.value = ['checkAll', '机构名称', '上传时间', '谱ID', '谱名', '卷ID', '卷名', '结算页数', '单双拍','电子谱', '结算单价', '结算金额', '审核状态', '结算状态', '审核人', '审核时间', '操作'];
+                    theadV.value = ['checkAll', '机构名称', '提交时间', '谱ID', '谱名', '卷ID', '卷名', '结算页数', '单双拍','电子谱', '结算单价', '结算金额', '审核状态', '结算状态', '审核人', '审核时间', '操作'];
                     parameterV.value = ['checkAll', 'orgName', 'submitTimeO', 'gcKey', 'genealogyName', 'volumeKey', 'volumeNumber', 'imgNumber', 'singleOrTwoO', 'isLeadImagesO', 'priceO', 'amount', 'takeStatusO', 'settlementStatusO', 'userName', 'passTimeO', 'action'];
                 }
             }

@@ -93,6 +93,7 @@ export default {
             if(!endTime.value){
                 return createMsg('请选择结束时间');
             }
+            tbody.value = [];
 			changePropertyValue('isLoading', true);
             const result = await supplierMS.getShootingCompletion(new Date(startTime.value).getTime(), new Date(endTime.value).getTime()+getDays(new Date(endTime.value).getTime())-1, orgKeyN.value, siteKey.value);
             changePropertyValue('isLoading', false);

@@ -436,4 +436,10 @@ input{
     display: block;
   }
 }
+.w130{
+    width: 130px !important;
+}
+.width180{
+  width: 180px !important;
+}
 </style>

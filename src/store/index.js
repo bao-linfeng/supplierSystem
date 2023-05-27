@@ -21,6 +21,15 @@ const state = reactive({
   lan: {},
   lanType: 'zh',
   sidebarW: 260,
+  billStatusO: {
+    0: '待审批',
+    1: '审批中',
+    2: '已确认',
+    3: '已驳回',
+    4: '已付款',
+    5: '已收款',
+    6: '已作废',
+  },
 });
 
 const changePropertyValue = (property, value) => {

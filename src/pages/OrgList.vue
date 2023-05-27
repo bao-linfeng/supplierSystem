@@ -22,7 +22,8 @@
                             <div v-if="item2 === 'action'">
                                 <button class="btn" @click="openData(item)">{{lan['查看详情']}}</button>
                             </div>
-                            <i v-else>{{item2 == 'name' ? lan[item[item2]] : item[item2]}}</i>
+                            <i v-else>{{item[item2]}}</i>
+                            <!-- <i v-else>{{item2 == 'name' ? lan[item[item2]] : item[item2]}}</i> -->
                         </td>
                     </tr>
                     <tr v-if="!tbody.length">
@@ -87,6 +88,7 @@ export default {
                 if(f){
                     tbody.value = result.data.map((ele) => {
                         ele.type = lan.value['拍机机构'];
+                        ele.name = lanType.value == 'en' ? ele.englishName : ele.name;
                         return ele;
                     });
                 }else{
@@ -98,6 +100,7 @@ export default {
                     orgList.value.unshift({'label': lan.value['全部机构'], 'value': ''});
                     tbody.value = result.data.map((ele) => {
                         ele.type = lan.value['拍机机构'];
+                        ele.name = lanType.value == 'en' ? ele.englishName : ele.name;
                         return ele;
                     });
                 }

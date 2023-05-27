@@ -99,7 +99,11 @@ export default {
             const result = await supplierMS.getBillList(orgKeyN.value, startTime.value, endTime.value, status.value, approvalStatus.value, page.value, limit.value);
             changePropertyValue('isLoading', false);
 			if(result.status == 200){
+                let gcNumber = 0, volumeNumber = 0, billNo = 0;
                 tbody.value = result.result.list.map((ele) => {
+                    billNo = billNo + 1;
+                    gcNumber = ele.gcNumber + gcNumber;
+                    volumeNumber = ele.volumeNumber + volumeNumber;
                     imgNumberO.value = imgNumberO.value + ele.totalImgNumber;
                     amountO.value = amountO.value + ele.totalAmount;
                     ele.organizationNo = ele.organizationNo ? ele.organizationNo +'('+ele.orgName+')' : '';
@@ -109,7 +113,7 @@ export default {
                     ele.approvalStatusO = ele.status >= 2 ? '' : ele.processError == 1 ? '' : lan.value['待']+ele.auUserName+lan.value['审批'];
                     return ele;
                 });
-                tbody.value.push({'orgName': '本页小计', 'totalImgNumber': (imgNumberO.value || 0), 'totalAmountO': '$'+(amountO.value).toFixed(2)});
+                tbody.value.push({'orgName': '本页小计', 'billNo': billNo, 'gcNumber': gcNumber, 'volumeNumber': volumeNumber,'totalImgNumber': (imgNumberO.value || 0), 'totalAmountO': '$'+(amountO.value).toFixed(2)});
                 pages.value = result.result.pageNum;
                 total.value = result.result.total;
 

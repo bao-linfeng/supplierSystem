@@ -19,6 +19,8 @@ const BillApprovalProcess = () => import('../pages/BillApprovalProcess.vue');
 const SystemLog = () => import('../pages/SystemLog.vue');
 const GenealogyMonthReport = () => import('../pages/GenealogyMonthReport.vue');
 const ImagesMonthReport = () => import('../pages/ImagesMonthReport.vue');
+const BillMonthReport = () => import('../pages/BillMonthReport.vue');
+const BillStatistics = () => import('../pages/BillStatistics.vue');
 const Bill = () => import('../pages/Bill.vue');
 
 const routes = [
@@ -26,6 +28,18 @@ const routes = [
         path: '/', 
         name: 'BootPage',
         component: BootPage,
+        props: true,
+    },
+    { 
+        path: '/billStatistics', 
+        name: 'BillStatistics',
+        component: BillStatistics,
+        props: true,
+    },
+    { 
+        path: '/billMonthReport', 
+        name: 'BillMonthReport',
+        component: BillMonthReport,
         props: true,
     },
     { 

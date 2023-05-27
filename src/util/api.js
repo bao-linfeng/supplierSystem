@@ -5,6 +5,7 @@ import { useRoute, useRouter } from 'vue-router';
 const router = useRouter();
 
 let baseURL='https://pumudata.qingtime.cn';
+// baseURL = 'https://genealogydatatest.qingtime.cn';
 
 if(window.location.origin.indexOf('suppliersys.1jiapu.com') > -1){
     baseURL = 'https://genealogydata.1jiapu.com';
@@ -214,7 +215,7 @@ const supplierMS = {
         }
         return request.get('/supplierMS/gcVerifyDetailTotal', param);
     },
-    getImageVerifyDetail(orgKey, siteKey, genealogyName, catalogKey, condition, startTime, endTime, status, page, limit){// 影像审核明细
+    getImageVerifyDetail(orgKey, siteKey, genealogyName, catalogKey, condition, startTime, endTime, uploadStartTime, uploadEndTime, status, page, limit){// 影像审核明细
         let param = {
             orgKey: orgKey,
             siteKey: siteKey,
@@ -223,6 +224,8 @@ const supplierMS = {
             condition: condition,
             startTime: startTime,
             endTime: endTime,
+            uploadStartTime: uploadStartTime,
+            uploadEndTime: uploadEndTime,
             status: status, 
             page: page,
             limit: limit
@@ -232,7 +235,7 @@ const supplierMS = {
     getimageVerifyDetailDownload(param){// 影像审核明细 - 下载
         return request.get('/supplierMS/imageVerifyDetailDownload', param);
     },
-    imageVerifyDetailTotal(orgKey, siteKey, genealogyName, catalogKey, condition, startTime, endTime, status, page, limit){// 影像审核明细总计
+    imageVerifyDetailTotal(orgKey, siteKey, genealogyName, catalogKey, condition, startTime, endTime, uploadStartTime, uploadEndTime, status, page, limit){// 影像审核明细总计
         let param = {
             orgKey: orgKey,
             siteKey: siteKey,
@@ -241,6 +244,8 @@ const supplierMS = {
             condition: condition,
             startTime: startTime,
             endTime: endTime,
+            uploadStartTime: uploadStartTime,
+            uploadEndTime: uploadEndTime,
             status: status, 
             page: page,
             limit: limit
@@ -492,8 +497,10 @@ const supplierMS = {
         }
         return request.get('/supplierMS/monthlySummaryOrg', param);
     },
-    imageMonthSummaryOrg(startTime, endTime, typeStatus){// 影像月度汇总（各机构统计）
+    imageMonthSummaryOrg(uploadStartTime, uploadEndTime, startTime, endTime, typeStatus){// 影像月度汇总（各机构统计）
         let param = {
+            uploadStartTime: uploadStartTime,
+            uploadEndTime: uploadEndTime,
             startTime: startTime,
             endTime: endTime,
             typeStatus: typeStatus,
@@ -522,6 +529,21 @@ const supplierMS = {
             limit: limit,
         }
         return request.get('/supplierMS/shootingCompletionList', param);
+    },
+    settledBillStatistics(param){// 发票月度汇总（已完成）
+        return request.get('/supplierMS/settledBillStatistics', param);
+    },
+    settledBillStatisticsDetail(param){//结算发票统计明细（已完结）
+        return request.get('/supplierMS/settledBillStatisticsDetail', param);
+    },
+    settledBillStatisticsTotal(param){// 结算发票汇总（已完结）
+        return request.get('/supplierMS/settledBillStatisticsTotal', param);
+    },
+    settledBillStatisticsDownload(param){// 结算发票统计和明细下载（已完结）
+        return request.get('/supplierMS/settledBillStatisticsDownload', param);
+    },
+    settledBillStatisticsDetailDownload(param){// 结算发票明细下载（已完结）
+        return request.get('/supplierMS/settledBillStatisticsDetailDownload', param);
     },
     toBeSettledTotal(param){// 获取待结算总计
         // let param = {

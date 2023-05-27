@@ -50,7 +50,7 @@ export default {
             {'name': '影像审核明细', 'path': '/imageStatistics', 'isChild': true, 'show': true},
             {'name': '查重月度汇总', 'path': '/monthGather', 'isChild': true, 'show': true},
             // {'name': '查重月度报告', 'path': '/genealogyMonthReport', 'isChild': true, 'show': true},
-            {'name': '影像月度汇总', 'path': '/imagesMonthReport', 'isChild': true, 'show': true},
+            {'name': '影像月度汇总', 'path': userRole.value >= 1 && userRole.value <= 3 ? '/imagesMonthReport' : '/imageGather', 'isChild': true, 'show': true},
             // {'name': '影像月度汇总', 'path': '/imagesMonthReport', 'isChild': true, 'show': true},
             // {'name': '拍摄数量汇总', 'path': '/deviceStatistics', 'isChild': true, 'show': true},
             {'name': '年度报告', 'path': '/yearGather', 'isChild': true, 'show': true},
@@ -126,6 +126,30 @@ export default {
                     // {'name': '发票审批流程', 'path': '/billApprovalProcess', 'isChild': true, 'show': true},
                     // {'name': '系统日志', 'path': '/systemLog', 'isChild': true, 'show': true},
                 ];
+            }else{
+                navList.value = [
+                    {'name': '首页1', 'path': '/supplier', 'icon': supplier, 'show': true},
+                    {'name': '合同', 'path': '/contractManage', 'icon': contract, 'show': true},
+                    {'name': '家谱拍摄质量报告', 'path': '/imageReport', 'icon': imageReport, 'show': true, 'child': ['/genealogyStatistics', '/imageStatistics', '/deviceStatistics', '/monthGather', '/genealogyMonthReport', '/imageGather', '/yearGather', '/genealogyMonthReport','/imagesMonthReport']},
+                    {'name': '谱目查重明细', 'path': '/genealogyStatistics', 'isChild': true, 'show': true},
+                    {'name': '影像审核明细', 'path': '/imageStatistics', 'isChild': true, 'show': true},
+                    {'name': '查重月度汇总', 'path': '/monthGather', 'isChild': true, 'show': true},
+                    // {'name': '查重月度报告', 'path': '/genealogyMonthReport', 'isChild': true, 'show': true},
+                    {'name': '影像月度汇总', 'path': userRole.value >= 1 && userRole.value <= 3 ? '/imagesMonthReport' : '/imageGather', 'isChild': true, 'show': true},
+                    // {'name': '影像月度汇总', 'path': '/imagesMonthReport', 'isChild': true, 'show': true},
+                    // {'name': '拍摄数量汇总', 'path': '/deviceStatistics', 'isChild': true, 'show': true},
+                    {'name': '年度报告', 'path': '/yearGather', 'isChild': true, 'show': true},
+                    // {'name': '家谱索引质量报告', 'path': '/nodeReport', 'child': ['1'], 'show': true},
+                    {'name': '结算中心', 'path': '/balanceCenter', 'icon': balanceCenter, 'child': ['/boBeSettledVolumeList', '/takeCameraBillList', '/billMonthReport'], 'show': true},
+                    {'name': '结算列表', 'path': '/boBeSettledVolumeList', 'isChild': true, 'show': true},
+                    {'name': '发票列表', 'path': '/takeCameraBillList', 'isChild': true, 'show': true},
+                    {'name': '发票清单', 'path': '/billMonthReport', 'isChild': true, 'show': true},
+                    {'name': '系统中心', 'path': '/sysCenter', 'icon': sysCenter, 'child': ['/baseSet', '/orgList', '/billApprovalProcess', '/systemLog'], 'show': true},
+                    {'name': '机构列表', 'path': '/orgList', 'isChild': true, 'show': true},
+                    {'name': '基础设置', 'path': '/baseSet', 'isChild': true, 'show': true},
+                    {'name': '发票审批流程', 'path': '/billApprovalProcess', 'isChild': true, 'show': true},
+                    {'name': '系统日志', 'path': '/systemLog', 'isChild': true, 'show': true},
+                ];
             }
             if(userRole.value >= 1 && userRole.value <= 2){
                 role.value = '管理员';
@@ -175,6 +199,29 @@ export default {
                     }
                 });
             }
+            navList.value = [
+                {'name': '首页1', 'path': '/supplier', 'icon': supplier, 'show': true},
+                {'name': '合同', 'path': '/contractManage', 'icon': contract, 'show': true},
+                {'name': '家谱拍摄质量报告', 'path': '/imageReport', 'icon': imageReport, 'show': true, 'child': ['/genealogyStatistics', '/imageStatistics', '/deviceStatistics', '/monthGather', '/genealogyMonthReport', '/imageGather', '/yearGather', '/genealogyMonthReport','/imagesMonthReport']},
+                {'name': '谱目查重明细', 'path': '/genealogyStatistics', 'isChild': true, 'show': true},
+                {'name': '影像审核明细', 'path': '/imageStatistics', 'isChild': true, 'show': true},
+                {'name': '查重月度汇总', 'path': '/monthGather', 'isChild': true, 'show': true},
+                // {'name': '查重月度报告', 'path': '/genealogyMonthReport', 'isChild': true, 'show': true},
+                {'name': '影像月度汇总', 'path': userRole.value >= 1 && userRole.value <= 3 ? '/imagesMonthReport' : '/imageGather', 'isChild': true, 'show': true},
+                // {'name': '影像月度汇总', 'path': '/imagesMonthReport', 'isChild': true, 'show': true},
+                // {'name': '拍摄数量汇总', 'path': '/deviceStatistics', 'isChild': true, 'show': true},
+                {'name': '年度报告', 'path': '/yearGather', 'isChild': true, 'show': true},
+                // {'name': '家谱索引质量报告', 'path': '/nodeReport', 'child': ['1'], 'show': true},
+                {'name': '结算中心', 'path': '/balanceCenter', 'icon': balanceCenter, 'child': ['/boBeSettledVolumeList', '/takeCameraBillList', 'billMonthReport'], 'show': true},
+                {'name': '结算列表', 'path': '/boBeSettledVolumeList', 'isChild': true, 'show': true},
+                {'name': '发票列表', 'path': '/takeCameraBillList', 'isChild': true, 'show': true},
+                {'name': '发票清单', 'path': '/billMonthReport', 'isChild': true, 'show': true},
+                {'name': '系统中心', 'path': '/sysCenter', 'icon': sysCenter, 'child': ['/baseSet', '/orgList', '/billApprovalProcess', '/systemLog'], 'show': true},
+                {'name': '机构列表', 'path': '/orgList', 'isChild': true, 'show': true},
+                {'name': '基础设置', 'path': '/baseSet', 'isChild': true, 'show': true},
+                {'name': '发票审批流程', 'path': '/billApprovalProcess', 'isChild': true, 'show': true},
+                {'name': '系统日志', 'path': '/systemLog', 'isChild': true, 'show': true},
+            ];
         });
 
         const changeLan = () => {

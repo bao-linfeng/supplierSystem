@@ -100,6 +100,7 @@ export default {
             if(!endTime.value){
                 return createMsg('请选择结束时间');
             }
+            tbody.value = [];
 			changePropertyValue('isLoading', true);
             const result = await supplierMS.getMonthlySummary(new Date(startTime.value).getTime(), new Date(endTime.value).getTime()+getDays(new Date(endTime.value).getTime())-1, orgKeyN.value, siteKey.value, isFileTime.value ? 2: 1);
             changePropertyValue('isLoading', false);
@@ -136,6 +137,8 @@ export default {
                 chartDataO.data.push(passNumber); 
                 chartDataO.data.push(notPassNumber); 
                 chartData.value = chartDataO;
+            }else{
+                createMsg(result.msg);
             }
         }
 

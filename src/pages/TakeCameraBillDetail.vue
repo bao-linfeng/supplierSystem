@@ -5,7 +5,7 @@
             <div class="head-right">
                 <span class="check-status">{{lan['当前状态']}}: {{BillDetail.statusO}}</span>
                 <el-button v-if="(userRole >= 1 && userRole <= 3)" type="primary" @click="openModule">{{BillDetail.status >= 2 ? lan['查看'] : lan['点击审批']}}</el-button>
-                <el-button type="primary hide" @click="openBill">{{lan['打印']}}</el-button>
+                <el-button class="hide" type="primary" @click="openBill">{{lan['打印']}}</el-button>
                 <!-- <el-button type="primary">{{lan['导出PDF文件']}}</el-button> -->
             </div>
         </div>

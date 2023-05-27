@@ -29,7 +29,7 @@
                                 <td>{{item.singleOrTwoO}}</td>
                                 <td>{{item.isLeadImagesO}}</td>
                                 <td>{{item.priceO}}</td>
-                                <td>{{lan[item.orgName]}}</td>
+                                <td>{{item.name}}</td>
                                 <td v-if="userRole >= 1 && userRole <= 2">
                                     <button class="btn marginR10" @click="editData(item, 1)">{{lan['编辑']}}</button>
                                     <button class="btn" @click="deleteData(item._key, 1)">{{lan['删除']}}</button>
@@ -62,7 +62,7 @@
                         <tbody class="tbody">
                             <tr v-for="(item, index) in yearTaskList" :key="index">
                                 <td>{{item.year}}</td>
-                                <td>{{lan[item.orgName]}}</td>
+                                <td>{{item.name}}</td>
                                 <td>{{item.taskNumber}}</td>
                                 <td v-if="userRole >= 1 && userRole <= 2">
                                     <button class="btn marginR10" @click="editData(item, 2)">{{lan['编辑']}}</button>
@@ -98,7 +98,7 @@ export default {
     name: 'baseSet',
     props: ['id'],
     setup(props, context) {
-        const { token, userKey, siteKey, orgKey, admin, userRole, lan, sidebarW } = toRefs(useState());
+        const { token, userKey, siteKey, orgKey, admin, userRole, lan, sidebarW, lanType } = toRefs(useState());
         const router = useRouter();
         const id = props.id;
 
@@ -112,6 +112,7 @@ export default {
             const result = await supplierMS.getPrice();
             if(result.status == 200){
                 takeCameraPriceList.value = result.data.map((ele) => {
+                    ele.name = lanType.value == 'en' ? ele.englishName : ele.orgName;
                     ele.singleOrTwoO = ele.singleOrTwo == 1 ? lan.value['单拍'] : ele.singleOrTwo == 2 ? lan.value['双拍'] : '';
                     ele.isLeadImagesO = ele.isLeadImages == 1 ? lan.value['电子谱'] : lan.value['纸谱'];
                     ele.priceO = '$'+ele.price;
@@ -126,6 +127,7 @@ export default {
             const result = await supplierMS.getOrgTask(userRole.value >= 1 && userRole.value <= 3 ? '' : orgKey.value);
             if(result.status == 200){
                 yearTaskList.value = result.data.map((ele) => {
+                    ele.name = lanType.value == 'en' ? ele.englishName : ele.orgName;
                     ele.organizationNo = ele.organizationNo ? ele.organizationNo +'('+ele.orgName+')' : '';
                     return ele;
                 });

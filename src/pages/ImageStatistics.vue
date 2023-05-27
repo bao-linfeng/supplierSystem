@@ -5,17 +5,27 @@
             <div class="head-right">
                 <el-input class="width150" v-model="genealogyName" :placeholder="lan['请输入谱名']"></el-input>
                 <el-input class="width150" v-model="catalogKey" :placeholder="lan['请输入谱ID']"></el-input>
+                <label for="">{{lan['上传时间']}}</label>
+                <el-date-picker
+                    class="width260"
+                    v-model="uploadTime"
+                    type="daterange"
+                    unlink-panels
+                    :start-placeholder="lan['上传开始时间']"
+                    :end-placeholder="lan['上传结束时间']"
+                />
+                <label for="">{{lan['通过时间']}}</label>
                 <el-date-picker
                     class="width260"
                     v-model="time"
                     type="daterange"
                     unlink-panels
-                    :start-placeholder="lan['开始时间']"
-                    :end-placeholder="lan['结束时间']"
+                    :start-placeholder="lan['通过开始时间']"
+                    :end-placeholder="lan['通过结束时间']"
                 />
-                <el-select v-model="condition" class="width120" multiple :placeholder="lan['谱审核状态']">
+                <!-- <el-select v-model="condition" class="width120" multiple :placeholder="lan['谱审核状态']">
                     <el-option v-for="item in conditionList" :key="item.value" :label="lan[item.label]" :value="item.value" />
-                </el-select>
+                </el-select> -->
                 <el-select v-if="userRole >= 1 && userRole <= 3" v-model="orgKeyN" class="width120" :placeholder="lan['机构筛选']">
                     <el-option v-for="item in orgList" :key="item.value" :label="item.label" :value="item.value" />
                 </el-select>
@@ -76,20 +86,23 @@ export default {
         const total = ref(0);
         const limit = ref(30);
 
-        const theadV = ref(['ProjectID', '卷ID', '卷名', '谱ID', '谱名', '拍数', '类别', '所属机构', '操作员', '提交日期', '审核日期', '审核人', '谱状态', '卷状态']);
-        const parameterV = ref(['ProjectID', 'volumeKey', 'volumeNumber', 'gcKey', 'genealogyName', 'imgNumber', 'singleOrTwo', 'orgName', 'operName', 'createTime', 'passTime', 'passUserName', 'condition', 'statusO']);
+        const theadV = ref(['ProjectID', '卷ID', '卷名', '谱ID', '谱名', '拍数', '类别', '所属机构', '操作员', '上传时间', '审核日期', '审核人', '谱状态', '卷状态']);
+        const parameterV = ref(['ProjectID', 'volumeKey', 'volumeNumber', 'gcKey', 'genealogyName', 'imgNumber', 'singleOrTwo', 'orgName', 'operName', 'submitTimeO', 'passTimeO', 'passUserName', 'condition', 'statusO']);
 
         const orgList = ref([]);
         const orgKeyN = ref('');
         const startTime = ref('');
         const endTime = ref('');
+        const uploadStartTime = ref(Date.now() - 1000*60*60*24*30*11);
+		const uploadEndTime = ref(Date.now());
         const time = ref('');
+        const uploadTime = ref('');
         const genealogyName = ref('');
         const catalogKey = ref('');
         let returnReasonO = '', conditionO = {'d': '重复', 'r': '无效', 'm': '待议', 'nf': '谱目通过', 'f': '影像通过'};
         const getImageVerifyDetail = async (f = true) => {
 			changePropertyValue('isLoading', true);
-            const result = await supplierMS.getImageVerifyDetail(orgKeyN.value, siteKey.value, genealogyName.value, catalogKey.value, condition.value.join(','), startTime.value, endTime.value, status.value.join(','), page.value , limit.value);
+            const result = await supplierMS.getImageVerifyDetail(orgKeyN.value, siteKey.value, genealogyName.value, catalogKey.value, condition.value.join(','), startTime.value, endTime.value, uploadStartTime.value, uploadEndTime.value, status.value.join(','), page.value , limit.value);
             changePropertyValue('isLoading', false);
 			if(result.status == 200){
                 let imageNumber = 0;
@@ -112,8 +125,8 @@ export default {
                     imageNumber = imageNumber + ele.imgNumber;
 
                     ele.orgName = lan.value[ele.orgName] + '|' + ele.organizationNo;
-                    ele.passTime = ele.passTime ? getLocalTime(ele.passTime, '-', 1) : '';
-                    ele.createTime = ele.createTime ? getLocalTime(ele.createTime, '-', 1) : '';
+                    ele.passTimeO = ele.passTime ? getLocalTime(ele.passTime, '-', 1) : '';
+                    ele.submitTimeO = ele.submitTime ? getLocalTime(ele.submitTime, '-', 1) : '';
                     ele.singleOrTwo = ele.singleOrTwo == '2' ? lan.value['双拍'] : ele.singleOrTwo == '1' ? lan.value['单拍'] : '';
                     ele.statusO = ele.takeStatus >= 7 && ele.takeStatus <= 9 ? lan.value['通过'] : ele.takeStatus == 12 ? lan.value['机构审核'] : ele.takeStatus == 5 ? lan.value['微站初审'] : ele.takeStatus == 13 ? lan.value['微站复审'] : ele.takeStatus == 14 ? lan.value['微站待议'] : ele.takeStatus == 6 ? lan.value['打回'] : ele.takeStatus == 16 ? lan.value['作废'] : '';
                     return ele;
@@ -136,6 +149,8 @@ export default {
                 'condition': condition.value.join(','), 
                 'startTime': startTime.value, 
                 'endTime': endTime.value, 
+                'uploadStartTime': uploadStartTime.value,
+                'uploadEndTime': uploadEndTime.value,
                 'status': status.value.join(','), 
                 'limit': 1000,
             });
@@ -146,7 +161,7 @@ export default {
         }
 
         const imageVerifyDetailTotal = async () => {
-            const result = await supplierMS.imageVerifyDetailTotal(orgKeyN.value, siteKey.value, genealogyName.value, catalogKey.value, condition.value.join(','), startTime.value, endTime.value, status.value.join(','), page.value , limit.value);
+            const result = await supplierMS.imageVerifyDetailTotal(orgKeyN.value, siteKey.value, genealogyName.value, catalogKey.value, condition.value.join(','), startTime.value, endTime.value, uploadStartTime.value, uploadEndTime.value, status.value.join(','), page.value , limit.value);
             if(result.status == 200){
                 let data = result.data;
                 tbody.value.push({'ProjectID': lan.value['汇总统计'], 'imgNumber': data.imageNumber});
@@ -202,6 +217,17 @@ export default {
             
         });
 
+        watch(uploadTime, (nv, ov) => {
+            if(nv){
+                uploadStartTime.value = new Date(nv[0]).getTime();
+                uploadEndTime.value = new Date(nv[1]).getTime() + 24*60*60*1000 - 1;
+            }else{
+                uploadStartTime.value = getLastYearTodayTimestamp();
+                uploadEndTime.value = getNowTimestamp(1) - 1;
+            }
+            
+        });
+
         const changePage = (i) => {
             page.value = i;
             getImageVerifyDetail();
@@ -217,10 +243,18 @@ export default {
             }
             
             if(getQueryVariable('startTime') && getQueryVariable('endTime')){
+                uploadTime.value = [Number(getQueryVariable('uploadStartTime')), Number(getQueryVariable('uploadEndTime')) - 24*60*60*1000 + 1];
+                uploadStartTime.value = getQueryVariable('uploadStartTime');
+                uploadEndTime.value = getQueryVariable('uploadEndTime');
+
                 time.value = [Number(getQueryVariable('startTime')), Number(getQueryVariable('endTime')) - 24*60*60*1000 + 1];
                 startTime.value = getQueryVariable('startTime');
                 endTime.value = getQueryVariable('endTime');
             }else{
+                uploadTime.value = [getLastYearTodayTimestamp(), getNowTimestamp()];
+                uploadStartTime.value = getLastYearTodayTimestamp();
+                uploadEndTime.value = getNowTimestamp(1) - 1;
+
                 time.value = [getLastYearTodayTimestamp(), getNowTimestamp()];
                 startTime.value = getLastYearTodayTimestamp();
                 endTime.value = getNowTimestamp(1) - 1;
@@ -232,7 +266,7 @@ export default {
 
         return {
             page, pages, total, theadV, parameterV, tbody, getImageVerifyDetail, sidebarW, 
-            changePage, time, orgList, orgKeyN, statusList, status, userRole, lan, handleSearch,
+            changePage, time, uploadTime, orgList, orgKeyN, statusList, status, userRole, lan, handleSearch,
             genealogyName, catalogKey, condition, conditionList, getimageVerifyDetailDownload, 
         }
     }
