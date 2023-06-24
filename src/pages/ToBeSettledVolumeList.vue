@@ -3,7 +3,7 @@
         <div class="pages-head">
             <div class="head-left">
                 <h3 class="title">{{lan['结算列表']}}</h3>
-                <span class="toggle" @click="isSearch = !isSearch">{{isSearch ? lan['展开'] : lan['收起']}}</span>
+                <span class="toggle" @click="isSearch = !isSearch">{{!isSearch ? lan['展开'] : lan['收起']}}</span>
             </div>
             <div class="head-right">
                 <el-checkbox v-if="(userRole < 1 || userRole > 3) && (settlementStatus == 'toBeSettled' || settlementStatus === 'all') && admin == 'admin' && total" v-model="isAllSelect">{{lan['全部选择']}}</el-checkbox>
@@ -19,13 +19,14 @@
                 <el-select class="width150" v-if="userRole >= 1 && userRole <= 3" v-model="orgKeyN" :placeholder="lan['机构筛选']">
                     <el-option v-for="item in orgList" :key="item.value" :label="item.label" :value="item.value" />
                 </el-select>
-                <el-select class="width150" v-model="takeStatus" :placeholder="lan['审核状态']">
+                <el-select class="width150" v-if="userRole >= 1 && userRole <= 3" v-model="takeStatus" multiple :placeholder="lan['审核状态']">
                     <el-option v-for="item in takeStatusList" :key="item.value" :label="item.label" :value="item.value" />
                 </el-select>
                 <el-select class="width150" v-model="settlementStatus" :placeholder="lan['结算状态']">
                     <el-option v-for="item in statusList" :key="item.value" :label="item.label" :value="item.value" />
                 </el-select>
                 <el-button type="primary" @click="getDataList">{{lan['检索']}}</el-button>
+                <el-button type="primary" @click="getDataDownload">{{lan['下载']}}</el-button>
             </div>
         </div>
         <div v-if="isSearch" class="search-wrap">
@@ -58,12 +59,12 @@
                     </tr>
                 </thead>
                 <tbody class="tbody">
-                    <tr v-for="(item, index) in tbody" :key="'tbody_'+index" :class="{active: volumeKeyArr.indexOf(item.volumeKey) > -1}">
+                    <tr v-for="(item, index) in tbody" :key="'tbody_'+index" :class="{active: volumeKeyArr.indexOf(item.volumeKey) > -1, active2: item.all}">
                         <td v-for="(item2, index2) in parameterV" :key="'parameter_'+index2">
                             <div class="action" v-if="item2 === 'checkAll' || item2 === 'action'">
                                 <i v-if="item2 === 'checkAll' && ['本页小计', '汇总统计', 'Subtotal on this page', 'Total'].indexOf(item.orgName) === -1" class="qingtime-check-box" :class="{disabled: item.settlementStatus}" @click="checkBoxClick(item.volumeKey, item.settlementStatus)"></i>
-                                <button v-if="item2 === 'action'" class="btn" @click="setDetail(item)">{{lan['设置']}}</button>
-                                <button v-if="item2 === 'action'" class="btn marginL5" @click="getHistory(item)">{{lan['历史']}}</button>
+                                <button v-if="item2 === 'action' && ['本页小计', '汇总统计', 'Subtotal on this page', 'Total'].indexOf(item.orgName) === -1" class="btn" @click="setDetail(item)">{{lan['设置']}}</button>
+                                <button v-if="item2 === 'action' && ['本页小计', '汇总统计', 'Subtotal on this page', 'Total'].indexOf(item.orgName) === -1" class="btn marginL5" @click="getHistory(item)">{{lan['记录']}}</button>
                             </div>
                             <i v-else>{{item2 == 'orgName' ? lan[item[item2]] : item[item2]}}</i>
                         </td>
@@ -86,7 +87,7 @@
 import { ref, reactive, onMounted, watch, watchEffect, computed, provide,readonly, toRefs } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useState, changePropertyValue } from '../store';
-import { getQueryVariable, getLocalTime, createMsg } from '../util/ADS';
+import { getQueryVariable, getLocalTime, createMsg, downliadLink } from '../util/ADS';
 import { supplierMS, org } from '../util/api';
 import PaginationModule from '../components/PaginationModule.vue';
 import SetSettled from '../components/SetSettled.vue';
@@ -140,7 +141,7 @@ export default {
                 singleOrTwo: singleOrTwo.value, 
                 isLeadImages: isLeadImages.value, 
                 orgKey: orgKeyN.value, 
-                takeStatus: takeStatus.value, 
+                takeStatus: takeStatus.value.join(','), 
                 settlementStatus: settlementStatus.value, 
                 price: price.value,
                 page: page.value , 
@@ -163,7 +164,6 @@ export default {
                     ele.takeStatusO = takeStatusO[ele.takeStatus] ? lan.value[takeStatusO[ele.takeStatus]] : '';
                     ele.settlementStatusO = ele.settlementStatus ? lan.value[settlementStatusO[ele.settlementStatus]] : lan.value['待结算'];
                     list.push(ele.volumeKey);
-                    // ele.takeStatusO = ele.takeStatus == 7 ? lan.value['待结算'] : ele.takeStatus == 8 ? lan.value['结算中'] : ele.takeStatus == 9 ? lan.value['已结算'] : ele.takeStatus == 10 ? lan.value['已收款'] : ele.takeStatus == 15 ? lan.value['不可结算'] : ''; 
                     return ele;
                 });
                 tbody.value.push({'orgName': '本页小计', 'imgNumber': imgNumberO.value, 'amount': '$'+(amountO.value).toFixed(2)});
@@ -192,14 +192,37 @@ export default {
                 singleOrTwo: singleOrTwo.value, 
                 isLeadImages: isLeadImages.value, 
                 orgKey: orgKeyN.value, 
-                takeStatus: takeStatus.value, 
+                takeStatus: takeStatus.value.join(','), 
                 settlementStatus: settlementStatus.value, 
                 price: price.value,
                 siteKey: siteKey.value,
             });
             if(result.status == 200){
                 let data = result.data;
-                tbody.value.push({'orgName': '汇总统计', 'imgNumber': data.pagesTotal, 'amount' : '$'+data.amountTotal});
+                tbody.value.push({'orgName': '汇总统计', 'all': true, 'imgNumber': data.pagesTotal, 'amount' : '$'+data.amountTotal});
+            }
+        }
+
+        // 下载
+        const getDataDownload = async () => {
+            const result = await supplierMS.toBeSettledDownload({
+                genealogyName: genealogyName.value, 
+                gcKey: gcKey.value, 
+                volumeKey: volumeKey.value, 
+                startTime: startTime.value, 
+                endTime: endTime.value, 
+                singleOrTwo: singleOrTwo.value, 
+                isLeadImages: isLeadImages.value, 
+                orgKey: orgKeyN.value, 
+                takeStatus: takeStatus.value.join(','), 
+                settlementStatus: settlementStatus.value, 
+                price: price.value,
+                siteKey: siteKey.value,
+            });
+            if(result.status == 200){
+                downliadLink(result.result);
+            }else{
+                createMsg(result.msg);
             }
         }
 
@@ -247,15 +270,16 @@ export default {
             {'label': lan.value['不可结算'], 'value': 'nonSettlement'},
         ]);
 
-        const takeStatus = ref(7);
+        const takeStatus = ref(['7']);
         const takeStatusList = ref([
             // {'label': lan.value['全部审核状态'], 'value': ''},
-            // {'label': lan.value['机构审核'], 'value': 12},
-            // {'label': lan.value['FS初审'], 'value': 5},
-            // {'label': lan.value['FS复审'], 'value': 13},
-            // {'label': lan.value['FS待议'], 'value': 14},
-            // {'label': lan.value['打回'], 'value': 6},
-            {'label': lan.value['通过'], 'value': 7},
+            {'label': lan.value['机构审核'], 'value': '12'},
+            {'label': lan.value['FS初审'], 'value': '5'},
+            {'label': lan.value['FS复审'], 'value': '13'},
+            {'label': lan.value['FS待议'], 'value': '14'},
+            {'label': lan.value['打回'], 'value': '6'},
+            {'label': lan.value['通过'], 'value': '7'},
+            {'label': lan.value['作废'], 'value': '16'},
         ]);
 
         const volumeKeyArr = ref([]);
@@ -385,6 +409,7 @@ export default {
 
         onMounted(() => {
             if(userRole.value >= 1 && userRole.value <= 3){
+                takeStatus.value = [];
                 theadV.value = ['checkAll', '机构名称', '提交时间', '谱ID', '谱名', '卷ID', '卷名', '结算页数', '单双拍','电子谱', '结算单价', '结算金额', '审核状态', '结算状态', '审核人', '审核时间', '操作'];
                 parameterV.value = ['checkAll', 'orgName', 'submitTimeO', 'gcKey', 'genealogyName', 'volumeKey', 'volumeNumber', 'imgNumber', 'singleOrTwoO', 'isLeadImagesO', 'priceO', 'amount', 'takeStatusO', 'settlementStatusO', 'userName', 'passTimeO', 'action'];
             }else{
@@ -455,7 +480,7 @@ export default {
             theadV, parameterV, tbody, getDataList, time, orgList, orgKeyN, orgName, statusList, settlementStatus, checkBoxClick, volumeKeyArr,
             changePage, page, pages, total, userRole, isAllSelect, admin, lan, sidebarW, addBillFoxx, imgNumberO, amountO, handlePatchVolumes,
             volumeNumber, genealogyName, takeStatus, takeStatusList, gcKey, volumeKey, checkAllBox, isShow, detail, closeSet, setDetail, saveSet,
-            getHistory, isLeadImages, singleOrTwo, isLeadImagesList, singleOrTwoList, price, isSearch,
+            getHistory, isLeadImages, singleOrTwo, isLeadImagesList, singleOrTwoList, price, isSearch, getDataDownload,
         }
     }
 }
@@ -478,11 +503,12 @@ export default {
     align-items: center;
     .head-left{
         display: flex;
-        align-items: center;
+        align-items: flex-end;
         .toggle{
             margin-left: 10px;
             cursor: pointer;
             color: #358acd;
+            font-size: 10px;
         }
     }
     .head-right{
@@ -559,6 +585,12 @@ export default {
                         border: 1px solid #ddd;
                     }
                 }
+            }
+            &.active2{
+                position: sticky;
+                bottom: 0;
+                background: #DBE6CC;
+                font-weight: bold;
             }
             td{
                 padding: 15px 10px;

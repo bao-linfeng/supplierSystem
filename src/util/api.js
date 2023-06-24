@@ -5,7 +5,7 @@ import { useRoute, useRouter } from 'vue-router';
 const router = useRouter();
 
 let baseURL='https://pumudata.qingtime.cn';
-// baseURL = 'https://genealogydatatest.qingtime.cn';
+baseURL = 'https://genealogydatatest.qingtime.cn';
 
 if(window.location.origin.indexOf('suppliersys.1jiapu.com') > -1){
     baseURL = 'https://genealogydata.1jiapu.com';
@@ -274,13 +274,13 @@ const supplierMS = {
         }
         return request.get('/supplierMS/monthlySummary', param);
     },
-    getShootingCompletion(startTime, endTime, orgKey, siteKey){// 拍摄完成度
-        let param = {
-            orgKey: orgKey,
-            siteKey: siteKey,
-            startTime: startTime,
-            endTime: endTime
-        }
+    getShootingCompletion(param){// 拍摄完成度
+        // let param = {
+        //     orgKey: orgKey,
+        //     siteKey: siteKey,
+        //     startTime: startTime,
+        //     endTime: endTime
+        // }
         return request.get('/supplierMS/shootingCompletion', param);
     },
     getAnnualTaskCompletion(startTime, endTime, orgKey, siteKey){// 年度任务完成度
@@ -545,6 +545,9 @@ const supplierMS = {
     settledBillStatisticsDetailDownload(param){// 结算发票明细下载（已完结）
         return request.get('/supplierMS/settledBillStatisticsDetailDownload', param);
     },
+    toBeSettledDownload(param){// 结算列表明细下载
+        return request.get('/supplierMS/toBeSettledDownload', param);
+    },
     toBeSettledTotal(param){// 获取待结算总计
         // let param = {
         //     orgKey: orgKey,
@@ -614,6 +617,12 @@ const supplierMS = {
     },
     getVolumeLogList(param){// 获取卷册日志（属性或者状态）
         return request.get('/v3/review/volumeLogList', param);
+    },
+    GCOverStatistics(param){//編目檢核（年/月/週）度匯總
+        return request.get('/supplierMS/GCOverStatistics', param);
+    },
+    GCOverStatisticsAllOrg(param){// 編目檢核月度汇总（各机构统计）
+        return request.get('/supplierMS/GCOverStatisticsAllOrg', param);
     },
 }
 

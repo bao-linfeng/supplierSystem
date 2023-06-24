@@ -27,7 +27,7 @@ const getLocalTime = (nS, symbol, index) => {
             Y, M, D, h, m, s;
         Y = date.getFullYear() + symbol;
         M = (date.getMonth() + 1 < 10 ? '0' + (date.getMonth() + 1) : date.getMonth() + 1) + symbol;
-        D = date.getDate() + ' ';
+        D = date.getDate() < 10 ? '0'+ date.getDate() : date.getDate()+'';
         h = appendzero(date.getHours()) + ':';
         m = appendzero(date.getMinutes()) + ':';
         s = appendzero(date.getSeconds());
@@ -274,7 +274,7 @@ function getLastYearTodayTimestamp(){
 }
 
 // 下载链接
-let APIURL='https://pumudata.qingtime.cn/';
+let APIURL='https://genealogydatatest.qingtime.cn/';
 if(window.location.origin.indexOf('suppliersys.1jiapu.com') > -1){
     APIURL = 'https://genealogydata.1jiapu.com/';
 }

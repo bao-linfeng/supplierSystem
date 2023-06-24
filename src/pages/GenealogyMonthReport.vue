@@ -41,7 +41,7 @@
                     </tr>
                 </thead>
                 <tbody class="tbody">
-                    <tr v-for="(item, index) in tbody" :key="'tbody_'+index">
+                    <tr v-for="(item, index) in tbody" :key="'tbody_'+index" :class="{active: item.englishName == '数据汇总'}">
                         <td v-for="(item2, index2) in parameterV" :key="'parameter_'+index2">
                             <div v-if="item2 === 'action'">
                                 
@@ -279,6 +279,12 @@ export default {
             }
             &:hover{
                 background: #DBE6CC;
+            }
+            &.active{
+                position: sticky;
+                bottom: 0;
+                background: #DBE6CC;
+                font-weight: bold;
             }
             td{
                 padding: 15px 0;

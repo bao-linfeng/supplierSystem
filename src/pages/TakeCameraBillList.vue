@@ -13,13 +13,13 @@
                 <el-select v-if="userRole >= 1 && userRole <= 3" v-model="orgKeyN" class="qingtime-select" :placeholder="lan['机构筛选']">
                     <el-option v-for="item in orgList" :key="item.value" :label="item.label" :value="item.value" />
                 </el-select>
-                <el-select v-model="status" class="qingtime-select" :placeholder="lan['发票状态']">
+                <el-select v-model="status" class="qingtime-select" multiple :placeholder="lan['发票状态']">
                     <el-option v-for="item in statusList" :key="item.value" :label="item.label" :value="item.value" />
                 </el-select>
                 <el-select v-if="userRole >= 1 && userRole <= 3" v-model="approvalStatus" class="qingtime-select" :placeholder="lan['审批状态']">
                     <el-option v-for="item in approvalStatusList" :key="item.value" :label="item.label" :value="item.value" />
                 </el-select>
-                <el-button type="primary" @click="getDataList">{{lan['检索']}}</el-button>
+                <el-button type="primary" @click="getDataList(true)">{{lan['检索']}}</el-button>
             </div>
         </div>
         <div class="pages-content style1">
@@ -30,7 +30,7 @@
                     </tr>
                 </thead>
                 <tbody class="tbody">
-                    <tr v-for="(item, index) in tbody" :key="'tbody_'+index" :class="{active: false, red: item.processError == 1}">
+                    <tr v-for="(item, index) in tbody" :key="'tbody_'+index" :class="{active: false, red: item.processError == 1, active2: item.all}">
                         <td v-for="(item2, index2) in parameterV" :key="'parameter_'+index2">
                             <div v-show="(index <= tbody.length - 3)" class="action" v-if="item2 === 'action'">
                                 <button class="btn" @click="goRouter(item._key)">{{lan['查看详情']}}</button>
@@ -96,7 +96,7 @@ export default {
             imgNumberO.value = 0;
             amountO.value = 0;
 			changePropertyValue('isLoading', true);
-            const result = await supplierMS.getBillList(orgKeyN.value, startTime.value, endTime.value, status.value, approvalStatus.value, page.value, limit.value);
+            const result = await supplierMS.getBillList(orgKeyN.value, startTime.value, endTime.value, status.value.join(','), approvalStatus.value, page.value, limit.value);
             changePropertyValue('isLoading', false);
 			if(result.status == 200){
                 let gcNumber = 0, volumeNumber = 0, billNo = 0;
@@ -122,10 +122,10 @@ export default {
         }
 
         const billTotal = async () => {
-            const result = await supplierMS.billTotal(orgKeyN.value, siteKey.value, startTime.value, endTime.value, approvalStatus.value, status.value);
+            const result = await supplierMS.billTotal(orgKeyN.value, siteKey.value, startTime.value, endTime.value, approvalStatus.value, status.value.join(','));
             if(result.status == 200){
                 let data = result.data;
-                tbody.value.push({'orgName': '汇总统计', 'totalImgNumber': data.pagesTotal, 'totalAmountO' : '$'+data.amountTotal});
+                tbody.value.push({'orgName': '汇总统计', 'all': true, 'billNo': data.billNumber, 'gcNumber': data.GCNumber, 'volumeNumber': data.volumeNumber, 'totalImgNumber': data.pagesTotal, 'totalAmountO' : '$'+data.amountTotal});
             }
         }
 
@@ -163,9 +163,9 @@ export default {
             });
         });
 
-        const status = ref('');
+        const status = ref([]);
         const statusList = ref([
-            {'label': lan.value['全部发票状态'], 'value': ''}, 
+            // {'label': lan.value['全部发票状态'], 'value': ''}, 
             {'label': lan.value['待审批'], 'value': '0'}, 
             {'label': lan.value['审批中'], 'value': '1'}, 
             {'label': lan.value['已确认'], 'value': '2'}, 
@@ -356,6 +356,12 @@ export default {
             }
             &.red{
                 color: #f00;
+            }
+            &.active2{
+                position: sticky;
+                bottom: 0;
+                background: #DBE6CC;
+                font-weight: bold;
             }
             td{
                 padding: 15px 0;

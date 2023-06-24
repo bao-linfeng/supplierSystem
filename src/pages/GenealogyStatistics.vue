@@ -24,7 +24,7 @@
                     </tr>
                 </thead>
                 <tbody class="tbody">
-                    <tr v-for="(item, index) in tbody" :key="'tbody_'+index">
+                    <tr :class="{active: item.all}" v-for="(item, index) in tbody" :key="'tbody_'+index">
                         <td v-for="(item2, index2) in parameterV" :key="'parameter_'+index2">
                             <div v-if="item2 === 'action'">
                                 <button class="button btn">下载</button>
@@ -105,7 +105,7 @@ export default {
             const result = await supplierMS.gcVerifyDetailTotal(orgKeyN.value, siteKey.value, startTime.value, endTime.value, page.value , limit.value);
             if(result.status == 200){
                 let data = result.data;
-                tbody.value.push({'fileName': lan.value['汇总统计'], 'toBeRediscussedNummberO': data.toBeRediscussedNummber ? ((data.toBeRediscussedNummber/data.totalNumber)*100).toFixed(2)+'%' : '0.00%', 'passRateO': data.nfNumber ? ((data.nfNumber/data.totalNumber)*100).toFixed(2)+'%' : '0.00%', 'notPassRateO': data.duplicateNumber ? ((data.duplicateNumber/data.totalNumber)*100).toFixed(2)+'%' : '0.00%', 'totalNumber': data.totalNumber, 'nfNumber': data.nfNumber, 'duplicateNumber': data.duplicateNumber, 'toBeRediscussedNummber': data.toBeRediscussedNummber, 'invalidNumber': data.invalidNumber});
+                tbody.value.push({'fileName': lan.value['汇总统计'], 'all': true, 'toBeRediscussedNummberO': data.toBeRediscussedNummber ? ((data.toBeRediscussedNummber/data.totalNumber)*100).toFixed(2)+'%' : '0.00%', 'passRateO': data.nfNumber ? ((data.nfNumber/data.totalNumber)*100).toFixed(2)+'%' : '0.00%', 'notPassRateO': data.duplicateNumber ? ((data.duplicateNumber/data.totalNumber)*100).toFixed(2)+'%' : '0.00%', 'totalNumber': data.totalNumber, 'nfNumber': data.nfNumber, 'duplicateNumber': data.duplicateNumber, 'toBeRediscussedNummber': data.toBeRediscussedNummber, 'invalidNumber': data.invalidNumber});
             }
         }
 
@@ -224,6 +224,12 @@ export default {
             }
             &:hover{
                 background: #DBE6CC;
+            }
+            &.active{
+                position: sticky;
+                bottom: 0;
+                background: #DBE6CC;
+                font-weight: bold;
             }
             td{
                 padding: 15px 10px;

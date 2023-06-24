@@ -13,17 +13,33 @@
                     <span>{{lan['图表展示']}}</span>
                     <img src="../assets/chart.svg" alt="">
                 </div>
+                <!-- <label for="">{{lan['上传时间']}}</label>
                 <el-date-picker
+                    class="w130"
+                    v-model="uploadStartTime"
+                    type="month"
+                    :placeholder="lan['上传开始时间']">
+                </el-date-picker>
+                <el-date-picker
+                    class="w130"
+                    v-model="uploadEndTime"
+                    type="month"
+                    :placeholder="lan['上传结束时间']">
+                </el-date-picker> -->
+                <label for="">{{lan['通过时间']}}</label>
+                <el-date-picker
+                    class="w130"
                     v-model="startTime"
                     type="month"
-                    :placeholder="lan['开始时间']">
+                    :placeholder="lan['通过开始时间']">
                 </el-date-picker>
                 <el-date-picker
+                    class="w130"
                     v-model="endTime"
                     type="month"
-                    :placeholder="lan['结束时间']">
+                    :placeholder="lan['通过结束时间']">
                 </el-date-picker>
-                <el-select v-if="userRole >= 1 && userRole <= 3" v-model="orgKeyN" class="org-select" :placeholder="lan['机构筛选']">
+                <el-select v-if="userRole >= 1 && userRole <= 3" v-model="orgKeyN" class="w130" :placeholder="lan['机构筛选']">
                     <el-option v-for="item in orgList" :key="item.value" :label="item.label" :value="item.value" />
                 </el-select>
                 <el-button type="primary" @click="getDataList">{{lan['检索']}}</el-button>
@@ -37,7 +53,7 @@
                     </tr>
                 </thead>
                 <tbody class="tbody">
-                    <tr v-for="(item, index) in tbody" :key="'tbody_'+index">
+                    <tr v-for="(item, index) in tbody" :key="'tbody_'+index" :class="{active: item.englishName == '数据汇总'}">
                         <td :class="{active: parameterList.indexOf(item2) > -1 && item.englishName != '汇总数据'}" v-for="(item2, index2) in parameterV" :key="'parameter_'+index2" @click="handleClickCell(item, item2)">
                             <div v-if="item2 === 'action'">
                                 
@@ -82,20 +98,27 @@ export default {
         const orgList = ref([]);
         const orgKeyN = ref('');
         const orgName = ref('');
-		const startTime = ref(Date.now() - 1000*60*60*24*30*11);
-		const endTime = ref(Date.now());
+		const startTime = ref('');
+		const endTime = ref('');
+        const uploadStartTime = ref('');
+		const uploadEndTime = ref('');
         const tbody = ref([]);
         const chartData = ref({'labels': [], 'data': [], 'label': []});
         const getDataList = async () => {
-            if(!startTime.value){
-                return createMsg('请选择开始时间');
-            }
-            if(!endTime.value){
-                return createMsg('请选择结束时间');
+            if(!startTime.value && !endTime.value && !uploadStartTime.value && !uploadEndTime.value){
+                return createMsg('请选择时间，上传时间和通过时间必选一个！');
             }
             tbody.value = [];
 			changePropertyValue('isLoading', true);
-            const result = await supplierMS.getShootingCompletion(new Date(startTime.value).getTime(), new Date(endTime.value).getTime()+getDays(new Date(endTime.value).getTime())-1, orgKeyN.value, siteKey.value);
+            // new Date(startTime.value).getTime(), new Date(endTime.value).getTime()+getDays(new Date(endTime.value).getTime())-1, orgKeyN.value, siteKey.value
+            const result = await supplierMS.getShootingCompletion({
+                'orgKey': orgKeyN.value,
+                'siteKey': siteKey.value,
+                'startTime': startTime.value ? new Date(startTime.value).getTime() : '',
+                'endTime': endTime.value ? new Date(endTime.value).getTime()+getDays(new Date(endTime.value).getTime())-1 : '',
+                'uploadStartTime': uploadStartTime.value ? new Date(uploadStartTime.value).getTime() : '',
+                'uploadEndTime': uploadEndTime.value ? new Date(uploadEndTime.value).getTime()+getDays(new Date(uploadEndTime.value).getTime())-1 : '',
+            });
             changePropertyValue('isLoading', false);
 			if(result.status == 200){
                 tbody.value = result.data.map((ele) => {
@@ -161,6 +184,9 @@ export default {
                 orgKeyN.value = orgKey.value;
             }
 
+            // uploadStartTime.value = getCurrentMonthZero();
+            // uploadEndTime.value = getCurrentMonthZero(0);
+
             startTime.value = getCurrentMonthZero();
             endTime.value = getCurrentMonthZero(0);
 
@@ -186,7 +212,7 @@ export default {
 
         return {
             theadV, parameterV, tbody, getDataList, orgList, orgKeyN, isChart, orgName, userRole, startTime, endTime,
-			chartData, lan, sidebarW, handleClickCell, timeStr, isShow, parameterList, routeList, routeType, 
+			chartData, lan, sidebarW, handleClickCell, timeStr, isShow, parameterList, routeList, routeType, uploadStartTime, uploadEndTime,
         }
     }
 }
@@ -265,6 +291,12 @@ export default {
             }
             &:hover{
                 background: #DBE6CC;
+            }
+            &.active{
+                position: sticky;
+                bottom: 0;
+                background: #DBE6CC;
+                font-weight: bold;
             }
             td{
                 padding: 15px 0;

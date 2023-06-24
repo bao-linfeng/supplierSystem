@@ -44,7 +44,7 @@
                     </tr>
                 </thead>
                 <tbody class="tbody">
-                    <tr v-for="(item, index) in tbody" :key="'tbody_'+index">
+                    <tr :class="{active: item.all}" v-for="(item, index) in tbody" :key="'tbody_'+index">
                         <td v-for="(item2, index2) in parameterV" :key="'parameter_'+index2">
                             <div v-if="item2 === 'action'">
                                 <button class="button btn">下载</button>
@@ -164,7 +164,7 @@ export default {
             const result = await supplierMS.imageVerifyDetailTotal(orgKeyN.value, siteKey.value, genealogyName.value, catalogKey.value, condition.value.join(','), startTime.value, endTime.value, uploadStartTime.value, uploadEndTime.value, status.value.join(','), page.value , limit.value);
             if(result.status == 200){
                 let data = result.data;
-                tbody.value.push({'ProjectID': lan.value['汇总统计'], 'imgNumber': data.imageNumber});
+                tbody.value.push({'ProjectID': lan.value['汇总统计'], 'all': true, 'imgNumber': data.imageNumber});
             }
         }
 
@@ -242,14 +242,18 @@ export default {
                 orgKeyN.value = orgKey.value;
             }
             
-            if(getQueryVariable('startTime') && getQueryVariable('endTime')){
-                uploadTime.value = [Number(getQueryVariable('uploadStartTime')), Number(getQueryVariable('uploadEndTime')) - 24*60*60*1000 + 1];
+            if(getQueryVariable('isAll')){
+                uploadTime.value = getQueryVariable('uploadStartTime') ? [Number(getQueryVariable('uploadStartTime')), Number(getQueryVariable('uploadEndTime')) - 24*60*60*1000 + 1] : '';
                 uploadStartTime.value = getQueryVariable('uploadStartTime');
                 uploadEndTime.value = getQueryVariable('uploadEndTime');
 
-                time.value = [Number(getQueryVariable('startTime')), Number(getQueryVariable('endTime')) - 24*60*60*1000 + 1];
+                time.value = getQueryVariable('startTime') ? [Number(getQueryVariable('startTime')), Number(getQueryVariable('endTime')) - 24*60*60*1000 + 1] : '';
                 startTime.value = getQueryVariable('startTime');
                 endTime.value = getQueryVariable('endTime');
+
+                if(!startTime.value){
+                    status.value = [];
+                }
             }else{
                 uploadTime.value = [getLastYearTodayTimestamp(), getNowTimestamp()];
                 uploadStartTime.value = getLastYearTodayTimestamp();
@@ -337,6 +341,12 @@ export default {
             }
             &:hover{
                 background: #DBE6CC;
+            }
+            &.active{
+                position: sticky;
+                bottom: 0;
+                background: #DBE6CC;
+                font-weight: bold;
             }
             td{
                 padding: 15px 10px;

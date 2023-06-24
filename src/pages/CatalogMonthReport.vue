@@ -2,72 +2,76 @@
     <div class="contract-wrap" :style="{width: 'calc(100% - '+sidebarW+'px)'}">
         <div class="contract-head">
             <div class="head-left">
-                <el-select v-if="userRole >= 1 && userRole <= 3" v-model="routeType" class="w130">
+                <el-select v-model="routeType" class="w130">
                     <el-option v-for="item in routeList" :key="item.value" :label="lan[item.label]" :value="item.value" />
                 </el-select>
-                <h3 v-else>{{lan['影像月度汇总']}}</h3>
             </div>
             <div class="head-right">
-                <!-- <el-radio-group class="marginR10" v-model="isFileTime" size="small">
-                    <el-radio :label="true">{{lan['全部状态']}}</el-radio>
-                    <el-radio :label="false">{{lan['审核通过']}}</el-radio>
-                </el-radio-group> -->
-                <!-- <el-checkbox class="marginR10" v-model="isFileTime">全部状态</el-checkbox> -->
                 <div class="chart-box" @click="isChart = true">
                     <span>{{lan['图表展示']}}</span>
                     <img src="../assets/chart.svg" alt="">
                 </div>
-                <label for="">{{lan['上传时间']}}</label>
-                <el-date-picker
-                    class="w130"
-                    v-model="uploadStartTime"
-                    type="month"
-                    :placeholder="lan['上传开始时间']">
-                </el-date-picker>
-                <el-date-picker
-                    class="w130"
-                    v-model="uploadEndTime"
-                    type="month"
-                    :placeholder="lan['上传结束时间']">
-                </el-date-picker>
-                <label for="">{{lan['通过时间']}}</label>
+                <!-- <label for="">{{lan['通过时间']}}</label> -->
                 <el-date-picker
                     class="w130"
                     v-model="startTime"
                     type="month"
-                    :placeholder="lan['通过开始时间']">
+                    :placeholder="lan['开始时间']">
                 </el-date-picker>
                 <el-date-picker
                     class="w130"
                     v-model="endTime"
                     type="month"
-                    :placeholder="lan['通过结束时间']">
+                    :placeholder="lan['结束时间']">
                 </el-date-picker>
                 
                 <el-button type="primary" @click="getDataList">{{lan['检索']}}</el-button>
                 <el-button type="primary" @click="initDownloadExcel">{{lan['下载']}}</el-button>
             </div>
         </div>
-        <div class="contract-content style1">
-            <table class="table">
-                <thead class="thead">
-                    <tr>
-                        <th v-for="(item, index) in theadV" :key="'thead_'+index">{{lan[item]}}</th>
-                    </tr>
-                </thead>
-                <tbody class="tbody">
-                    <tr v-for="(item, index) in tbody" :key="'tbody_'+index" :class="{active: item.englishName == '数据汇总'}">
-                        <td v-for="(item2, index2) in parameterV" @click="handleCellClick(item2, item)" :key="'parameter_'+index2">
-                            <div v-if="item2 === 'action'"></div>
-                            <i v-else>{{item[item2]}}</i>
-                        </td>
-                    </tr>
-                    <tr v-if="!tbody.length">
-                        <td :colspan="parameterV.length">{{lan['暂无数据']}}</td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
+        <el-table class="el-table-box" :data="tableData" :max-height="tableH">
+            <el-table-column prop="englishName" label="月数据" width="90" fixed />
+            <el-table-column label="数据汇总" fixed>
+                <el-table-column prop="allOrgNumber" label="完结" fixed />
+                <el-table-column prop="allOrgNumberNo" label="未完结" fixed />
+                <el-table-column prop="allOrgNumberFP" label="完成率" fixed />
+            </el-table-column>
+            <el-table-column label="寻源堂">
+                <el-table-column prop="aa" label="完结" />
+                <el-table-column prop="aaNo" label="未完结" />
+                <el-table-column prop="aaFP" label="完成率" />
+            </el-table-column>
+            <el-table-column label="成蹊">
+                <el-table-column prop="bb" label="完结" />
+                <el-table-column prop="bbNo" label="未完结" />
+                <el-table-column prop="bbFP" label="完成率" />
+            </el-table-column>
+            <el-table-column label="馨里有谱">
+                <el-table-column prop="bbc" label="完结" />
+                <el-table-column prop="bbcNo" label="未完结" />
+                <el-table-column prop="bbcFP" label="完成率" />
+            </el-table-column>
+            <el-table-column label="仰沁">
+                <el-table-column prop="cc" label="完结" />
+                <el-table-column prop="ccNo" label="未完结" />
+                <el-table-column prop="ccFP" label="完成率" />
+            </el-table-column>
+            <el-table-column label="良友科苑">
+                <el-table-column prop="dd" label="完结" />
+                <el-table-column prop="ddNo" label="未完结" />
+                <el-table-column prop="ddFP" label="完成率" />
+            </el-table-column>
+            <el-table-column label="时光科技">
+                <el-table-column prop="ee" label="完结" />
+                <el-table-column prop="eeNo" label="未完结" />
+                <el-table-column prop="eeFP" label="完成率" />
+            </el-table-column>
+            <el-table-column label="古中山">
+                <el-table-column prop="ff" label="完结" />
+                <el-table-column prop="ffNo" label="未完结" />
+                <el-table-column prop="ffFP" label="完成率" />
+            </el-table-column>
+        </el-table>
         <ChartModule v-if="isChart" :year="Date.now()" :orgName="''" :chartData="chartData" v-on:close="isChart = false" />
     </div>
 </template>
@@ -84,52 +88,57 @@ export default {
     components: {
         ChartModule, 
     },
-    name: 'imagesMonthReport',
+    name: 'catalogMonthReport',
     props: ['id'],
     setup(props, context) {
         const { userKey, siteKey, userRole, orgKey, lan, sidebarW } = toRefs(useState());
         const router = useRouter();
         const id = props.id;
 
-        const theadV = ref(['年度月份', '数据汇总', '寻源堂', '成蹊', '馨里有谱', '仰沁', '良友科苑', '时光科技', '古中山']);
-        const parameterV = ref(['englishName', 'allOrgNumber', 'aa', 'bb', 'bbc', 'cc', 'dd', 'ee', 'ff']);
+        const tableH = ref(300);
 
-		const startTime = ref(Date.now() - 1000*60*60*24*30*11);
-		const endTime = ref(Date.now());
-        const uploadStartTime = ref(Date.now() - 1000*60*60*24*30*11);
-		const uploadEndTime = ref(Date.now());
-        const tbody = ref([]);
+		const startTime = ref('');
+		const endTime = ref('');
+        
+        const tableData = ref([]);
         const chartData = ref({'labels': [], 'data': [], 'label': []});
+        // 机构汇总统计数据
         const getDataList = async () => {
-            if(!startTime.value && !endTime.value && !uploadStartTime.value && !uploadEndTime.value){
-                return createMsg('请选择时间，上传时间和通过时间必选一个！');
-            }
-            tbody.value = [];
+            tableData.value = [];
 			changePropertyValue('isLoading', true);
-            const result = await supplierMS.imageMonthSummaryOrg(uploadStartTime.value ? new Date(uploadStartTime.value).getTime() : '', uploadEndTime.value ? new Date(uploadEndTime.value).getTime()+getDays(new Date(uploadEndTime.value).getTime())-1 : '', startTime.value ? new Date(startTime.value).getTime() : '', endTime.value ? new Date(endTime.value).getTime()+getDays(new Date(endTime.value).getTime())-1 : '', isFileTime.value ? 2: 1);
+            const result = await supplierMS.GCOverStatisticsAllOrg({
+                'startTime': startTime.value ? new Date(startTime.value).getTime() : '',
+                'endTime': endTime.value ? new Date(endTime.value).getTime()+getDays(new Date(endTime.value).getTime())-1 : '',
+            });
             changePropertyValue('isLoading', false);
 			if(result.status == 200){
-                tbody.value = result.data.map((ele) => {
+                tableData.value = result.data.map((ele) => {
                     if(ele.englishName == '数据汇总'){
                         ele.englishName = lan.value[ele.englishName];
                     }else{
                         ele.englishName = ele.year+''+(ele.month <= 9 ? '0'+ele.month : ele.month);
                     }
-                    
 
-                    ele.organizationNo = ele.organizationNo ? ele.organizationNo +'('+ele.orgName+')' : '';
+                    ele.allOrgNumberFP = ele.allOrgNumberFP ? (ele.allOrgNumberFP*100).toFixed(2)+'%' : '0%';
+                    ele.aaFP = ele.aaFP ? (ele.aaFP*100).toFixed(2)+'%' : '0%';
+                    ele.bbFP = ele.bbFP ? (ele.bbFP*100).toFixed(2)+'%' : '0%';
+                    ele.bbcFP = ele.bbcFP ? (ele.bbcFP*100).toFixed(2)+'%' : '0%';
+                    ele.ccFP = ele.ccFP ? (ele.ccFP*100).toFixed(2)+'%' : '0%';
+                    ele.ddFP = ele.ddFP ? (ele.ddFP*100).toFixed(2)+'%' : '0%';
+                    ele.eeFP = ele.eeFP ? (ele.eeFP*100).toFixed(2)+'%' : '0%';
+                    ele.ffFP = ele.ffFP ? (ele.ffFP*100).toFixed(2)+'%' : '0%';
+                    
                     return ele;
                 });
 
                 let chartDataO = {'labels': [], 'data': [], 'label': [lan.value['寻源堂'], lan.value['成蹊'], lan.value['馨里有谱'], lan.value['仰沁'], lan.value['良友科苑'], lan.value['时光科技'], lan.value['古中山']]};
-                let all = [], aa = [], bb = [], bbc = [], cc = [], dd = [], ee = [], ff =[];
+                let aa = [], bb = [], bbc = [], cc = [], dd = [], ee = [], ff =[];
 
-                tbody.value.forEach((ele) => {
+                tableData.value.forEach((ele) => {
                     if(ele.englishName == '数据汇总'){
 
                     }else{
                         chartDataO.labels.push(ele.englishName); 
-                        all.push(ele.allOrgNumber);
                         aa.push(ele.aa);
                         bb.push(ele.bb);
                         bbc.push(ele.bbc);
@@ -139,7 +148,6 @@ export default {
                         ff.push(ele.ff);
                     }
                 });
-                // chartDataO.data.push(all); 
                 chartDataO.data.push(aa); 
                 chartDataO.data.push(bb); 
                 chartDataO.data.push(bbc); 
@@ -154,14 +162,7 @@ export default {
             }
         }
 
-        const routeList = ref([{'label': '按影像汇总', 'value': '/imageGather'}, {'label': '按机构汇总', 'value': '/imagesMonthReport'}]);
-        const routeType = ref('/imagesMonthReport');
-        watch(routeType, (nv, ov) => {
-            router.push(nv);
-        });
-
-        const isChart = ref(false);
-
+        // 机构
         let orgKeyO = {};
         const getOrgList = async () => {
             const result = await org.getOrgList(siteKey.value, '');
@@ -172,29 +173,29 @@ export default {
             }
         }
 
-        watch(startTime, (nv, ov) => {
-            console.log(nv);
+        // 切换页面
+        const routeList = ref([{'label': '按编目汇总', 'value': '/catalogReport'}, {'label': '按机构汇总', 'value': '/catalogMonthReport'}]);
+        const routeType = ref('/catalogMonthReport');
+        watch(routeType, (nv, ov) => {
+            router.push(nv);
         });
+        // 可视化
+        const isChart = ref(false);
 
         onMounted(() => {
-            uploadStartTime.value = getCurrentMonthZero();
-            uploadEndTime.value = getCurrentMonthZero(0);
             startTime.value = getCurrentMonthZero();
             endTime.value = getCurrentMonthZero(0);
 
-            getOrgList();
-            getDataList();
-        });
+            tableH.value = window.innerHeight - 100;
 
-        const isFileTime = ref(false);
-        watch(isFileTime, () => {
+            getOrgList();
             getDataList();
         });
 
         // 单元格点击 
         const handleCellClick = (row, column) => {
             console.log(row, column);
-            let orgKey = '', startTimes = '', endTimes = '', uploadStartTimes = '', uploadEndTimes = '';
+            let orgKey = '', startTimes = '', endTimes = '';
 
             if(row == 'englishName'){
                 return;
@@ -207,32 +208,23 @@ export default {
                 if(startTime.value && endTime.value){
                     startTimes = getMonthTimestamp(column.year, column.month).firstDayTimestamp;
                     endTimes = getMonthTimestamp(column.year, column.month).lastDayTimestamp;
-
-                    uploadStartTimes = uploadStartTime.value ? new Date(uploadStartTime.value).getTime() : '';
-                    uploadEndTimes = uploadEndTime.value ? new Date(uploadEndTime.value).getTime()+getDays(new Date(uploadEndTime.value).getTime())-1 : '';
                 }else{
                     startTimes = '';
                     endTimes = '';
-
-                    uploadStartTimes = getMonthTimestamp(column.year, column.month).firstDayTimestamp;
-                    uploadEndTimes = getMonthTimestamp(column.year, column.month).lastDayTimestamp;
                 }
             }else{
                 startTimes = startTime.value ? new Date(startTime.value).getTime() : '';
                 endTimes = endTime.value ? new Date(endTime.value).getTime()+getDays(new Date(endTime.value).getTime())-1 : '';
-
-                uploadStartTimes = uploadStartTime.value ? new Date(uploadStartTime.value).getTime() : '';
-                uploadEndTimes = uploadEndTime.value ? new Date(uploadEndTime.value).getTime()+getDays(new Date(uploadEndTime.value).getTime())-1 : '';
             }
 
-            window.open('/imageStatistics?orgKey='+orgKey+'&startTime='+startTimes+'&endTime='+endTimes+'&uploadStartTime='+uploadStartTimes+'&uploadEndTime='+uploadEndTimes+'&isAll=1');
+            window.open('/imageStatistics?orgKey='+orgKey+'&startTime='+startTimes+'&endTime='+endTimes+'&isAll=1');
         }
 
         // 下载
         const initDownloadExcel = () => {
             let aoa = [];
-            aoa.push(theadV.value);
-            tbody.value.forEach((ele) => {
+            aoa.push(['月数据', '汇总数据', '寻源堂', '成蹊', '馨里有谱', '仰沁', '良友科苑', '时光科技', '古中山']);
+            tableData.value.forEach((ele) => {
                 aoa.push([ele.englishName, ele.allOrgNumber, ele.aa, ele.bb, ele.bbc, ele.cc, ele.dd, ele.ee, ele.ff]);
             });
             /** 
@@ -291,14 +283,14 @@ export default {
             (function aoa_to_sheet(aoa){
                 let XLSX = window.XLSX;
                 var sheet = XLSX.utils.aoa_to_sheet(aoa);
-                openDownloadDialog(sheet2blob(sheet), '影像月度汇总.xlsx');
+                openDownloadDialog(sheet2blob(sheet), '编目月度汇总.xlsx');
             })(aoa)
         }
 
         return {
-            theadV, parameterV, tbody, getDataList, isChart, userRole, startTime, endTime,
-			chartData, lan, sidebarW, routeList, routeType, isFileTime, handleCellClick, 
-            initDownloadExcel, uploadStartTime, uploadEndTime,
+            tableData, getDataList, isChart, userRole, startTime, endTime,
+			chartData, lan, sidebarW, routeList, routeType, handleCellClick, 
+            initDownloadExcel, tableH, 
         }
     }
 }
@@ -412,5 +404,9 @@ export default {
 }
 .w130{
     width: 130px !important;
+}
+.el-table-box{
+    width: calc(100% - 40px);
+    margin: 0 auto;
 }
 </style>

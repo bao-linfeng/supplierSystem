@@ -19,6 +19,7 @@ app.use(i18nPlugin, i18nStrings);
 
 
 let baseURL='https://pumudata.qingtime.cn';
+baseURL = 'https://genealogydatatest.qingtime.cn';
 
 if(window.location.origin.indexOf('suppliersys.1jiapu.com') > -1){
     baseURL = 'https://genealogydata.1jiapu.com';

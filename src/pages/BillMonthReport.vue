@@ -4,7 +4,7 @@
             <div class="head-left">
                 <h3>{{lan['发票清单']}}</h3>
                 <div class="toggle-box" @click="changeToggle">
-                    <i>{{toggle ? lan['展开'] : lan['收起']}}</i>
+                    <i>{{!toggle ? lan['展开'] : lan['收起']}}</i>
                 </div>
             </div>
             <!-- <div class="chart-box" @click="isChart = true">
@@ -61,21 +61,26 @@
             <table class="table">
                 <thead class="thead">
                     <tr>
-                        <th v-for="(item, index) in theadV" :key="'thead_'+index">{{lan[item]}}</th>
+                        <th v-for="(item, index) in theadV" :key="'thead_'+index" @click="handleSort(item)">
+                            <div class="th-box">
+                                <i>{{lan[item.label]}}</i>
+                                <img v-if="item.sort" class="sort" :src="item.sortType == 'auto' ? auto : item.sortType == 'asc' ? asc : desc" />
+                            </div> 
+                        </th>
                     </tr>
                 </thead>
                 <tbody class="tbody">
                     <tr :class="{active: item.all}" v-for="(item, index) in tbody" :key="'tbody_'+index">
-                        <td v-for="(item2, index2) in parameterV" :key="'parameter_'+index2">
-                            <div v-if="item2 === 'action'">
+                        <td v-for="(item2, index2) in theadV" :key="'parameter_'+index2">
+                            <div v-if="item2.value === 'action'">
                                 <button class="button btn marginR10" @click="handleRowClick(item)">{{lan['详情']}}</button>
                                 <button v-if="!item.all" class="button btn" @click="handleDownLoad(item)">{{lan['下载']}}</button>
                             </div>
-                            <i v-else>{{item[item2]}}</i>
+                            <i v-else>{{item[item2.value]}}</i>
                         </td>
                     </tr>
                     <tr v-if="!tbody.length">
-                        <td :colspan="parameterV.length">{{lan['暂无数据']}}</td>
+                        <td :colspan="theadV.length">{{lan['暂无数据']}}</td>
                     </tr>
                 </tbody>
             </table>
@@ -93,6 +98,9 @@ import { getQueryVariable, getLocalTime, createMsg, getCurrentMonthZero, getDays
 import { supplierMS, org } from '../util/api';
 import ChartModule from '../components/ChartModule.vue';
 import BillStatisticsModule from '../components/BillStatisticsModule.vue';
+import auto from '../assets/icon/auto.svg';
+import asc from '../assets/icon/asc.svg';
+import desc from '../assets/icon/desc.svg';
 
 export default {
     components: {
@@ -105,8 +113,72 @@ export default {
         const router = useRouter();
         const id = props.id;
 
-        const theadV = ref(['机构名称', '发票编号', '发票提交时间', '发票审核通过时间', '提交谱数', '卷数', '影像页数', '金额小计', '发票状态', '操作']);
-        const parameterV = ref(['name', 'billNo', 'createTimeO', 'billPassTimeO', 'gcNumber', 'volumeNumber', 'imgNumber', 'amountO', 'billStatusO', 'action']);
+        const theadV = ref([
+            {'label': '机构名称', 'value': 'name', 'sort': true, 'sortType': 'auto', 'sortBy': 'englishName'},
+            {'label': '发票编号', 'value': 'billNo', 'sort': false, 'sortType': 'auto', 'sortBy': 'billNo'},
+            {'label': '发票提交时间', 'value': 'createTimeO', 'sort': true, 'sortType': 'auto', 'sortBy': 'createTime'},
+            {'label': '发票审核通过时间', 'value': 'billPassTimeO', 'sort': true, 'sortType': 'auto', 'sortBy': 'billPassTime'},
+            {'label': '提交谱数', 'value': 'gcNumber', 'sort': false, 'sortType': '', 'sortBy': ''},
+            {'label': '卷数', 'value': 'volumeNumber', 'sort': false, 'sortType': '', 'sortBy': ''},
+            {'label': '影像页数', 'value': 'imgNumber', 'sort': false, 'sortType': '', 'sortBy': ''},
+            {'label': '金额小计', 'value': 'amountO', 'sort': false, 'sortType': '', 'sortBy': ''},
+            {'label': '发票状态', 'value': 'billStatusO', 'sort': false, 'sortType': '', 'sortBy': ''},
+            {'label': '操作', 'value': 'action', 'sort': false, 'sortType': '', 'sortBy': ''},
+        ]);
+
+        const handleSort = (data) => {
+            sortField.value = data.sortBy;
+            theadV.value.forEach((ele) => {
+                if(ele.value == data.value){
+                    if(ele.sortType == 'auto'){
+                        ele.sortType = 'asc';
+                    }else if(ele.sortType == 'asc'){
+                        ele.sortType = 'desc';
+                    }else if(ele.sortType == 'desc'){
+                        ele.sortType = 'auto';
+                    }
+                    sortType.value = ele.sortType;
+                    handleSortFn();
+                }else{
+                    ele.sortType = 'auto';
+                }
+            });
+        }
+
+        const handleSortFn = () => {
+            tbody.value.sort((a, b) => {
+                if(sortField.value == 'englishName'){
+                    if(sortType.value == 'asc'){
+                        if(a[sortField.value] > b[sortField.value]){
+                            return 1;
+                        }
+                        if(a[sortField.value] < b[sortField.value]){
+                            return -1;
+                        }
+                    }
+                    if(sortType.value == 'desc'){
+                        if(b[sortField.value] > a[sortField.value]){
+                            return 1;
+                        }
+                        if(b[sortField.value] < a[sortField.value]){
+                            return -1;
+                        }
+                    }
+                }else{
+                    if(sortType.value == 'asc'){
+                        return a[sortField.value] - b[sortField.value];
+                    }
+                    if(sortType.value == 'desc'){
+                        return b[sortField.value] - a[sortField.value];
+                    }
+                }
+                
+                return 0;
+            });
+        }
+
+        const sortField = ref('');
+        const sortType = ref('');
 
         const billCreateTime = ref('');
 		const billCreateStartTime = ref('');
@@ -287,6 +359,11 @@ export default {
         });
 
         onMounted(() => {
+            if(userRole.value >= 1 && userRole.value <= 3){
+
+            }else{
+                orgKeyN.value = [orgKey.value];
+            }
             billCreateTime.value = [getCurrentMonthZero(), getCurrentMonthZero(0)];
 
             getOrgList();
@@ -343,6 +420,7 @@ export default {
         const getDataDownload = async () => {
             changePropertyValue('isLoading', true);
             const result = await supplierMS.settledBillStatisticsDownload({
+                'siteKey': siteKey.value,
                 'billCreateStartTime': billCreateStartTime.value,
                 'billCreateEndTime': billCreateEndTime.value,
                 'billPassStartTime': billPassStartTime.value,
@@ -353,7 +431,7 @@ export default {
                 'imgPassEndTime': imgPassEndTime.value,
                 'orgKey': orgKeyN.value.join(','),
                 'billStatus': billStatus.value.join(','),
-                'siteKey': siteKey.value,
+                'status': status.value.join(','),
             });
             changePropertyValue('isLoading', false);
 			if(result.status == 200){
@@ -393,8 +471,8 @@ export default {
         }
 
         return {
-            theadV, parameterV, tbody, getDataList, isChart, userRole, chartData, lan, sidebarW, handleCellClick, orgList, handleRowClick, 
-            isList, searchO, handleDownLoad, 
+            theadV, tbody, getDataList, isChart, userRole, chartData, lan, sidebarW, handleCellClick, orgList, handleRowClick, 
+            isList, searchO, handleDownLoad, handleSort, auto, asc, desc,
             billCreateTime, billPassTime, uploadTime, imgPassTime, billStatus, billStatusList, toggle, changeToggle, getDataDownload, status, statusList,
 			orgKeyN, billCreateStartTime, billCreateEndTime, billPassStartTime, billPassEndTime, uploadStartTime, uploadEndTime, imgPassStartTime, imgPassEndTime,
         }
@@ -485,6 +563,19 @@ export default {
                 padding: 5px 0;
                 min-width: 80px;
                 border: 1px solid #ddd;
+                cursor: pointer;
+                .th-box{
+                    display: flex;
+                    justify-content: center;
+                    align-items: center;
+                    i{
+                        display: inline-block;
+                    }
+                    .sort{
+                        display: inline-block;
+                        width: 20px;
+                    }
+                }
             }
         }
     }

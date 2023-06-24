@@ -19,6 +19,8 @@ const BillApprovalProcess = () => import('../pages/BillApprovalProcess.vue');
 const SystemLog = () => import('../pages/SystemLog.vue');
 const GenealogyMonthReport = () => import('../pages/GenealogyMonthReport.vue');
 const ImagesMonthReport = () => import('../pages/ImagesMonthReport.vue');
+const CatalogMonthReport = () => import('../pages/CatalogMonthReport.vue');
+const CatalogReport = () => import('../pages/CatalogReport.vue');
 const BillMonthReport = () => import('../pages/BillMonthReport.vue');
 const BillStatistics = () => import('../pages/BillStatistics.vue');
 const Bill = () => import('../pages/Bill.vue');
@@ -28,6 +30,18 @@ const routes = [
         path: '/', 
         name: 'BootPage',
         component: BootPage,
+        props: true,
+    },
+    { 
+        path: '/catalogReport', 
+        name: 'CatalogReport',
+        component: CatalogReport,
+        props: true,
+    },
+    { 
+        path: '/catalogMonthReport', 
+        name: 'CatalogMonthReport',
+        component: CatalogMonthReport,
         props: true,
     },
     { 

@@ -13,7 +13,7 @@ const state = reactive({
   siteKey: '1528234980',
   origin: window.location.origin || '',
   navActive: '/',
-  baseURL: window.location.origin.indexOf('suppliersys.1jiapu.com') > -1 ? 'https://genealogydata.1jiapu.com' : 'https://pumudata.qingtime.cn',
+  baseURL: window.location.origin.indexOf('suppliersys.1jiapu.com') > -1 ? 'https://genealogydata.1jiapu.com' : 'https://genealogydatatest.qingtime.cn',
   isLoading: false,
   orgName: getValue('orgName') || '',
   orgKey: getValue('orgKey') || '',

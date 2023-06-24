@@ -318,7 +318,7 @@ const EN = {
     '已作废': 'Cancel',
     '设置': 'Set',
     '批量不可结算': 'Batch no settled',
-    '历史': 'History',
+    '记录': 'Log',
     '提交日期': 'Submit Time',
     '家谱类型': 'E-Genealogy',
     '拍数类型': 'Single/Double Page',
@@ -368,8 +368,8 @@ const EN = {
     '发票清单': 'Invoice List',
     '详情': 'List',
     '当前拍数': 'Current Pages',
-    '': '',
-    '': '',
+    '编目月度汇总': 'CatalogMonthReport',
+    '按编目汇总': 'Catalog Summary',
 }
 
 export {
