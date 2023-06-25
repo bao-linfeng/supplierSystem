@@ -123,6 +123,9 @@ const user = {
         }
         return request.post('/user', param);
     },
+    getRoleUserList(param){// 获取角色对应的人员
+        return request.get('/roleUserList', param);
+    },
 }
 
 const org = {
