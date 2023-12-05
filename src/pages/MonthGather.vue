@@ -58,7 +58,8 @@
                 </tbody>
             </table>
         </div>
-        <ChartModule v-if="isChart" :year="Date.now()" :orgName="orgName" :chartData="chartData" v-on:close="isChart = false" />
+        <!-- <ChartModule v-if="isChart" :year="Date.now()" :orgName="orgName" :chartData="chartData" v-on:close="isChart = false" /> -->
+        <EchartsModule v-if="isChart" :title="title" :subtitle="subtitle+' '+orgName" :chartData="chartData" v-on:close="isChart = false" />
         <GenealogyListModule v-if="isShow == 1" :timeStr="timeStr" :condition="condition" :orgKeyN="orgKeyN" :orgName="orgName"  v-on:close="isShow = 0" />
     </div>
 </template>
@@ -67,14 +68,15 @@
 import { ref, reactive, onMounted, watch, watchEffect, computed, provide,readonly, toRefs } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useState, changePropertyValue } from '../store';
-import { getQueryVariable, getLocalTime, createMsg, getCurrentMonthZero, getDays } from '../util/ADS';
+import { getQueryVariable, getLocalTime, createMsg, getCurrentMonthZero, getDays, thousands } from '../util/ADS';
 import { supplierMS, org } from '../util/api';
 import ChartModule from '../components/ChartModule.vue';
+import EchartsModule from '../components/EchartsModule.vue';
 import GenealogyListModule from '../components/GenealogyListModule.vue';
 
 export default {
     components: {
-        ChartModule, GenealogyListModule, 
+        ChartModule, GenealogyListModule, EchartsModule, 
     },
     name: 'monthGather',
     props: ['id'],
@@ -83,8 +85,8 @@ export default {
         const router = useRouter();
         const id = props.id;
 
-        const theadV = ref(['月數據', '机构名称', '提交谱数', '可拍摄谱数', '重复谱数', '待议谱数', '无效谱数','可拍率', '重复率', '待议谱率', '无效谱率']);
-        const parameterV = ref(['englishName', 'orgName', 'totalNumber', 'nfNumber', 'duplicateNumber', 'toBeRediscussedNummber', 'invalidNumber', 'passRateO', 'notPassRateO', 'toBeRediscussedNummberO', 'invalidNumberO']);
+        const theadV = ref(['月數據', '机构名称', '提交谱数', '可拍摄谱数', '重复谱数', '待议谱数', '无效谱数', '作废谱数', '完结数', '可拍率', '重复率', '待议谱率', '无效谱率', '作废谱率','完结率']);
+        const parameterV = ref(['englishName', 'orgName', 'totalNumberT', 'nfNumberT', 'duplicateNumberT', 'toBeRediscussedNummberT', 'invalidNumberT', 'cancelNumberT', 'finishNumberT','passRateO', 'notPassRateO', 'toBeRediscussedNummberO', 'invalidNumberO', 'cancelNumberO','finishNumberO']);
 
         const orgList = ref([]);
         const orgKeyN = ref('');
@@ -119,10 +121,33 @@ export default {
                     ele.notPassRateO = ele.duplicateNumber ? ((ele.duplicateNumber/ele.totalNumber)*100).toFixed(2)+'%' : '0.00%';
                     ele.toBeRediscussedNummberO = ele.toBeRediscussedNummber ? ((ele.toBeRediscussedNummber/ele.totalNumber)*100).toFixed(2)+'%' : '0.00%';
                     ele.invalidNumberO = ele.invalidNumber ? ((ele.invalidNumber/ele.totalNumber)*100).toFixed(2)+'%' : '0.00%';
+                    ele.finishNumberO = ele.finishNumber ? ((ele.finishNumber/ele.totalNumber)*100).toFixed(2)+'%' : '0.00%';
+                    ele.cancelNumberO = ele.cancelNumber ? ((ele.cancelNumber/ele.totalNumber)*100).toFixed(2)+'%' : '0.00%';
+
+                    ele.nfNumberT = thousands(ele.nfNumber);
+                    ele.duplicateNumberT = thousands(ele.duplicateNumber);
+                    ele.toBeRediscussedNummberT = thousands(ele.toBeRediscussedNummber);
+                    ele.invalidNumberT = thousands(ele.invalidNumber);
+                    ele.finishNumberT = thousands(ele.finishNumber);
+                    ele.cancelNumberT = thousands(ele.cancelNumber);
+                    ele.totalNumberT = thousands(ele.totalNumber);
+
                     return ele;
                 });
 
-                let chartDataO = {'labels': [], 'data': [], 'label': [lan.value['提交谱数'], lan.value['可拍摄谱数'], lan.value['重复谱数']]}, allNumber = [], passNumber = [], notPassNumber = [];
+                let chartDataO = {
+                    'labels': [], 
+                    'data': [], 
+                    'label': [
+                        lan.value['提交谱数'], 
+                        lan.value['可拍摄谱数'], 
+                        lan.value['重复谱数'], 
+                        lan.value['待议谱数'], 
+                        lan.value['无效谱数'], 
+                        lan.value['作废谱数'], 
+                        lan.value['完结数']]
+                    }, allNumber = [], passNumber = [], duplicateNumber = [], toBeRediscussedNummber = [], invalidNumber = [], cancelNumber = [], finishNumber = [];
+
                 tbody.value.forEach((ele) => {
                     if(ele.englishName == '数据汇总'){
 
@@ -130,12 +155,20 @@ export default {
                         chartDataO.labels.push(ele.englishName); 
                         allNumber.push(ele.totalNumber);
                         passNumber.push(ele.nfNumber);
-                        notPassNumber.push(ele.duplicateNumber);
+                        duplicateNumber.push(ele.duplicateNumber);
+                        toBeRediscussedNummber.push(ele.toBeRediscussedNummber);
+                        invalidNumber.push(ele.invalidNumber);
+                        cancelNumber.push(ele.cancelNumber);
+                        finishNumber.push(ele.finishNumber);
                     }
                 });
                 chartDataO.data.push(allNumber); 
                 chartDataO.data.push(passNumber); 
-                chartDataO.data.push(notPassNumber); 
+                chartDataO.data.push(duplicateNumber); 
+                chartDataO.data.push(toBeRediscussedNummber); 
+                chartDataO.data.push(invalidNumber); 
+                chartDataO.data.push(cancelNumber); 
+                chartDataO.data.push(finishNumber); 
                 chartData.value = chartDataO;
             }else{
                 createMsg(result.msg);
@@ -173,7 +206,7 @@ export default {
             
             startTime.value = getCurrentMonthZero();
             endTime.value = getCurrentMonthZero(0);
-
+            subtitle.value = getLocalTime(startTime.value, '/', 2) + '-' + getLocalTime((endTime.value), '/', 2);
 
             getOrgList();
             getDataList();
@@ -202,9 +235,18 @@ export default {
             getDataList();
         });
 
+        const title = ref(lan.value['查重月度汇总']);
+        const subtitle = ref('');
+        watch(startTime, (nv, ov) => {
+            subtitle.value = getLocalTime(startTime.value, '/', 2) + '-' + getLocalTime((endTime.value), '/', 2);
+        });
+        watch(endTime, (nv, ov) => {
+            subtitle.value = getLocalTime(startTime.value, '/', 2) + '-' + getLocalTime((endTime.value), '/', 2);
+        });
+
         return {
             theadV, parameterV, tbody, getDataList, orgList, orgKeyN, isChart, chartData, orgName, userRole, startTime, endTime, lan, 
-            sidebarW, routeList, routeType, handleClickCell, parameterList, isShow, timeStr, condition, isFileTime,
+            sidebarW, routeList, routeType, handleClickCell, parameterList, isShow, timeStr, condition, isFileTime, title, subtitle,
         }
     }
 }

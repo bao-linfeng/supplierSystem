@@ -51,7 +51,7 @@
 import { ref, reactive, onMounted, watch, watchEffect, computed, provide,readonly, toRefs } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useState, changePropertyValue } from '../store';
-import { getQueryVariable, getLocalTime } from '../util/ADS';
+import { getQueryVariable, getLocalTime, getTodayZero } from '../util/ADS';
 import { supplierMS, org } from '../util/api';
 import PaginationModule from '../components/PaginationModule.vue';
 import ContractModule from '../components/ContractModule.vue';
@@ -76,7 +76,7 @@ export default {
         const orgKeyN = ref('');
 
         const startTime = ref(Date.now() - 1000*60*60*24*30*6);
-        const endTime = ref(Date.now());
+        const endTime = ref(getTodayZero()+24*60*60*1000-1);
         const time = ref('');
 
         watch(time, (nv, ov) => {

@@ -85,7 +85,7 @@ export default {
                         data: props.chartData.data[i],
                         backgroundColor: backgroundColor.value[i],
                         borderColor: borderColor.value[i],
-                        borderWidth: 1
+                        borderWidth: 1,
                     });
                 }
             });
@@ -99,6 +99,31 @@ export default {
                         labels: props.chartData.labels,
                         datasets: datasets
                     },
+                    options: {
+                        // hover: {
+                        //     animationDuration: 0  // 防止鼠标移上去，数字闪烁
+                        // },
+                        // animation: {           // 这部分是数值显示的功能实现
+                        //     onComplete: function () {
+                        //         var chartInstance = this.chart,
+            
+                        //         ctx = chartInstance.ctx;
+                        //         // 以下属于canvas的属性（font、fillStyle、textAlign...）
+                        //         // ctx.font = Chart.helpers.fontString(Chart.defaults.global.defaultFontSize, Chart.defaults.global.defaultFontStyle, Chart.defaults.global.defaultFontFamily);
+                        //         ctx.fillStyle = "black";
+                        //         ctx.textAlign = 'center';
+                        //         ctx.textBaseline = 'bottom';
+            
+                        //         datasets.forEach(function (dataset, i) {
+                        //             var meta = chartInstance.controller.getDatasetMeta(i);
+                        //             meta.data.forEach(function (bar, index) {
+                        //                 var data = dataset.data[index];
+                        //                 ctx.fillText(data, bar._model.x, bar._model.y - 5);
+                        //             });
+                        //         });
+                        //     }
+                        // }
+                    }
                 });
             }
         }
@@ -122,7 +147,7 @@ export default {
 
         onMounted(() => {
             ctx = document.getElementById("adai-chart").getContext('2d');
-            // console.log(props.chartData);
+            console.log(props.chartData);
             chartData.value = props.chartData;
             let list = [];
             props.chartData.label.forEach((ele) => {

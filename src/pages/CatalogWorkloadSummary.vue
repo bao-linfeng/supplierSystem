@@ -10,16 +10,18 @@
                 <el-date-picker
                     class="w130"
                     v-model="startTime"
-                    type="month"
+                    :type="accountTime == 1 ? 'date' : 'month'"
                     :placeholder="lan['开始时间']">
                 </el-date-picker>
                 <el-date-picker
                     class="w130"
                     v-model="endTime"
-                    type="month"
+                    :type="accountTime == 1 ? 'date' : 'month'"
                     :placeholder="lan['结束时间']">
                 </el-date-picker>
-                
+                <el-select v-model="accountTime" class="w80">
+                    <el-option v-for="item in accountTimeList" :key="item.value" :label="item.label" :value="item.value" />
+                </el-select>
                 <el-button type="primary" @click="getDataList">{{lan['检索']}}</el-button>
                 <!-- <el-button type="primary" @click="initDownloadExcel">{{lan['下载']}}</el-button> -->
             </div>
@@ -27,7 +29,7 @@
         <el-table class="el-table-box" :data="tableData" :max-height="tableH" :border="true" :stripe="true">
             <el-table-column prop="englishName" label="日期" :align="'center'"></el-table-column>
             <el-table-column v-for="(ele, i) in roleUserList" :prop="ele.value" :label="ele.label" :key="i" :align="'center'"></el-table-column>
-            <el-table-column prop="allOrgNumber" label="合计" :align="'center'"></el-table-column>
+            <el-table-column prop="allUserNumber" label="合计" :align="'center'"></el-table-column>
         </el-table>
         <ChartModule v-if="isChart" :year="Date.now()" :orgName="''" :chartData="chartData" v-on:close="isChart = false" />
     </div>
@@ -56,40 +58,44 @@ export default {
 
 		const startTime = ref('');
 		const endTime = ref('');
+        const accountTime = ref('1'); // 1日2周3月
+        const accountTimeList = ref([
+            {'label': '日', 'value': '1'},
+            {'label': '周', 'value': '2'},
+            {'label': '月', 'value': '3'}
+        ]);
+        const userKeyArr = ref([]); // 不传所有，传 逗号分隔的字符串
         
         const tableData = ref([]);
         const chartData = ref({'labels': [], 'data': [], 'label': []});
-        // 机构汇总统计数据
         const getDataList = async () => {
+            console.log(startTime.value, endTime.value);
             tableData.value = [];
 			changePropertyValue('isLoading', true);
-            const result = await supplierMS.GCOverStatisticsAllOrg({
+            const result = await supplierMS.GCOverWorkStatistics({
                 'startTime': startTime.value ? new Date(startTime.value).getTime() : '',
-                'endTime': endTime.value ? new Date(endTime.value).getTime()+getDays(new Date(endTime.value).getTime())-1 : '',
+                'endTime': endTime.value ? new Date(endTime.value).getTime() + (accountTime.value == 1 ? 24*60*60*1000 - 1 : 0) : '',
+                'accountTime': accountTime.value,
+                'userKeyArr': userKeyArr.value.join(','),
             });
             changePropertyValue('isLoading', false);
 			if(result.status == 200){
                 tableData.value = result.data.map((ele) => {
-                    if(ele.englishName == '数据汇总'){
-                        ele.englishName = lan.value[ele.englishName];
+                    if(ele.sTime){
+                        if(ele.eTime && accountTime.value == 2){
+                            ele.englishName = getLocalTime(ele.sTime, '-', 1) + '~' + getLocalTime(ele.eTime, '-', 1);
+                        }else{
+                            ele.englishName = getLocalTime(ele.sTime, '-', accountTime.value == 3 ? 2 : 1);
+                        }
                     }else{
-                        ele.englishName = ele.year+''+(ele.month <= 9 ? '0'+ele.month : ele.month);
+                        ele.englishName = '数据汇总';
                     }
-
-                    ele.allOrgNumberFP = ele.allOrgNumberFP ? (ele.allOrgNumberFP*100).toFixed(2)+'%' : '0%';
-                    ele.aaFP = ele.aaFP ? (ele.aaFP*100).toFixed(2)+'%' : '0%';
-                    ele.bbFP = ele.bbFP ? (ele.bbFP*100).toFixed(2)+'%' : '0%';
-                    ele.bbcFP = ele.bbcFP ? (ele.bbcFP*100).toFixed(2)+'%' : '0%';
-                    ele.ccFP = ele.ccFP ? (ele.ccFP*100).toFixed(2)+'%' : '0%';
-                    ele.ddFP = ele.ddFP ? (ele.ddFP*100).toFixed(2)+'%' : '0%';
-                    ele.eeFP = ele.eeFP ? (ele.eeFP*100).toFixed(2)+'%' : '0%';
-                    ele.ffFP = ele.ffFP ? (ele.ffFP*100).toFixed(2)+'%' : '0%';
                     
                     return ele;
                 });
 
                 let chartDataO = {'labels': [], 'data': [], 'label': [lan.value['寻源堂'], lan.value['成蹊'], lan.value['馨里有谱'], lan.value['仰沁'], lan.value['良友科苑'], lan.value['时光科技'], lan.value['古中山']]};
-                let aa = [], bb = [], bbc = [], cc = [], dd = [], ee = [], ff =[];
+                let aa = [];
 
                 tableData.value.forEach((ele) => {
                     if(ele.englishName == '数据汇总'){
@@ -97,21 +103,9 @@ export default {
                     }else{
                         chartDataO.labels.push(ele.englishName); 
                         aa.push(ele.aa);
-                        bb.push(ele.bb);
-                        bbc.push(ele.bbc);
-                        cc.push(ele.cc);
-                        dd.push(ele.dd);
-                        ee.push(ele.ee);
-                        ff.push(ele.ff);
                     }
                 });
-                chartDataO.data.push(aa); 
-                chartDataO.data.push(bb); 
-                chartDataO.data.push(bbc); 
-                chartDataO.data.push(cc); 
-                chartDataO.data.push(dd); 
-                chartDataO.data.push(ee); 
-                chartDataO.data.push(ff); 
+                chartDataO.data.push(aa);  
 
                 chartData.value = chartDataO;
             }else{
@@ -157,11 +151,26 @@ export default {
         // 可视化
         const isChart = ref(false);
 
+        watch(accountTime, (nv, ov) => {
+            if(nv == 1){
+                startTime.value = getCurrentMonthZero(0);
+                endTime.value = new Date(getCurrentMonthZero(0)).getTime() + getDays() - 24*60*60*1000;
+            }else{
+                startTime.value = getCurrentMonthZero();
+                endTime.value = getCurrentMonthZero(-1);
+            }
+
+            getDataList();
+        });
+
         onMounted(() => {
-            startTime.value = getCurrentMonthZero();
-            endTime.value = getCurrentMonthZero(0);
+            startTime.value = getCurrentMonthZero(0);
+            endTime.value = new Date(getCurrentMonthZero(0)).getTime() + getDays() - 24*60*60*1000;
 
             tableH.value = window.innerHeight - 100;
+
+            changePropertyValue('navActive', '/catalogWorkloadSummary');
+            changePropertyValue('sidebarW', 0);
 
             getOrgList();
             getRoleUserList();
@@ -238,7 +247,7 @@ export default {
         return {
             tableData, getDataList, isChart, userRole, startTime, endTime,
 			chartData, lan, sidebarW, routeList, routeType, 
-            initDownloadExcel, tableH, roleUserList,
+            initDownloadExcel, tableH, roleUserList, accountTime, accountTimeList
         }
     }
 }
@@ -279,6 +288,9 @@ export default {
 }
 .w130{
     width: 130px !important;
+}
+.w80{
+    width: 80px;
 }
 .el-table-box{
     width: calc(100% - 40px);

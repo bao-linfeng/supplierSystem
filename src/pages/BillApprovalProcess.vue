@@ -23,7 +23,7 @@
                         <td>{{item.approvalNo}}</td>
                         <td>{{item.nodeName}}</td>
                         <td>{{item.userName}}</td>
-                        <td>{{item.amount ? '$'+item.amount : ''}}</td>
+                        <td>{{item.amountO}}</td>
                         <td>{{item.email}}</td>
                         <td v-if="userRole >= 1 && userRole <= 3">
                             <button class="btn marginR10" @click="editData(item, 1)">{{lan['编辑']}}</button>
@@ -44,7 +44,7 @@
 import { ref, reactive, onMounted, watch, watchEffect, computed, provide,readonly, toRefs } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useState, changePropertyValue } from '../store';
-import { getQueryVariable, getLocalTime, createMsg } from '../util/ADS';
+import { getQueryVariable, getLocalTime, createMsg, thousands } from '../util/ADS';
 import { supplierMS, org } from '../util/api';
 import EditBillAP from '../components/EditBillAP.vue';
 
@@ -67,7 +67,10 @@ export default {
         const getApprovalUser = async () => {
             const result = await supplierMS.getApprovalUser(siteKey.value);
             if(result.status == 200){
-                dataList.value = result.data;
+                dataList.value = result.data.map((ele) => {
+                    ele.amountO = ele.amount ? '$'+thousands(ele.amount) : '';
+                    return ele;
+                });
             }else{
                 createMsg(result.msg);
             }

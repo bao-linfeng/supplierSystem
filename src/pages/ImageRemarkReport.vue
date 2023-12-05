@@ -7,11 +7,13 @@
                 </el-select>
             </div>
             <div class="head-right">
-                <div class="chart-box" @click="isChart = true">
+                <!-- <div class="chart-box" @click="isChart = true">
                     <span>{{lan['图表展示']}}</span>
                     <img src="../assets/chart.svg" alt="">
-                </div>
-                <!-- <label for="">{{lan['通过时间']}}</label> -->
+                </div> -->
+                <el-select v-if="userRole >= 1 && userRole <= 3" v-model="orgKeyN" class="w130" :placeholder="lan['机构筛选']">
+                    <el-option v-for="item in orgList" :key="item.value" :label="item.label" :value="item.value" />
+                </el-select>
                 <el-date-picker
                     class="w130"
                     v-model="startTime"
@@ -24,56 +26,31 @@
                     type="month"
                     :placeholder="lan['结束时间']">
                 </el-date-picker>
-                
+                <el-select v-model="accountTime" class="w130">
+                    <el-option v-for="item in accountTimeList" :key="item.value" :label="item.label" :value="item.value" />
+                </el-select>
                 <el-button type="primary" @click="getDataList">{{lan['检索']}}</el-button>
                 <el-button type="primary" @click="initDownloadExcel">{{lan['下载']}}</el-button>
             </div>
         </div>
         <el-table class="el-table-box" :data="tableData" :max-height="tableH">
-            <el-table-column prop="englishName" :label="lan['年度月份']" width="90" fixed :align="'center'" />
-            <el-table-column :label="lan['数据汇总']" fixed :align="'center'">
-                <el-table-column prop="allOrgNumberT" :label="lan['完结']" fixed :align="'center'" />
-                <el-table-column prop="allOrgNumberNoT" :label="lan['未完结']" fixed :align="'center'" />
-                <el-table-column prop="allOrgNumberFP" :label="lan['完成率']" fixed :align="'center'" />
+            <el-table-column prop="time" :label="lan['年度月份']" width="120" fixed :align="'center'" />
+            <el-table-column prop="organizationNo" :label="lan['机构名称']" width="90" fixed :align="'center'" />
+            <el-table-column prop="inStoreTotalNumberO" :label="lan['已完成总册数']" width="120" fixed :align="'center'" />
+            <el-table-column :label="lan['影像错误原因分析']" fixed :align="'center'">
+                <el-table-column prop="模糊" :label="lan['模糊']" fixed :align="'center'" />
+                <el-table-column prop="缺页" :label="lan['缺页']" fixed :align="'center'" />
+                <el-table-column prop="重复" :label="lan['重复']" fixed :align="'center'" />
+                <el-table-column prop="有异物" :label="lan['有异物']" fixed :align="'center'" />
+                <el-table-column prop="不完整" :label="lan['不完整']" fixed :align="'center'" />
+                <el-table-column prop="非家谱影像" :label="lan['非家谱影像']" fixed :align="'center'" />
+                <el-table-column prop="影像歪斜" :label="lan['影像歪斜']" fixed :align="'center'" />
+                <el-table-column prop="其他" :label="lan['其他']" fixed :align="'center'" />
+                <!-- <el-table-column prop="卷册名" :label="lan['卷册名']" fixed :align="'center'" /> -->
             </el-table-column>
-            <el-table-column :label="lan['寻源堂']" :align="'center'">
-                <el-table-column prop="aaT" :label="lan['完结']" :align="'center'" />
-                <el-table-column prop="aaNoT" :label="lan['未完结']" :align="'center'" />
-                <el-table-column prop="aaFP" :label="lan['完成率']" :align="'center'" />
-            </el-table-column>
-            <el-table-column :label="lan['成蹊']" :align="'center'">
-                <el-table-column prop="bbT" :label="lan['完结']" :align="'center'" />
-                <el-table-column prop="bbNoT" :label="lan['未完结']" :align="'center'" />
-                <el-table-column prop="bbFP" :label="lan['完成率']" :align="'center'" />
-            </el-table-column>
-            <el-table-column :label="lan['馨里有谱']" :align="'center'">
-                <el-table-column prop="bbcT" :label="lan['完结']" :align="'center'" />
-                <el-table-column prop="bbcNoT" :label="lan['未完结']" :align="'center'" />
-                <el-table-column prop="bbcFP" :label="lan['完成率']" :align="'center'" />
-            </el-table-column>
-            <el-table-column :label="lan['仰沁']" :align="'center'">
-                <el-table-column prop="ccT" :label="lan['完结']" :align="'center'" />
-                <el-table-column prop="ccNoT" :label="lan['未完结']" :align="'center'" />
-                <el-table-column prop="ccFP" :label="lan['完成率']" :align="'center'" />
-            </el-table-column>
-            <el-table-column :label="lan['良友科苑']" :align="'center'">
-                <el-table-column prop="ddT" :label="lan['完结']" :align="'center'" />
-                <el-table-column prop="ddNoT" :label="lan['未完结']" :align="'center'" />
-                <el-table-column prop="ddFP" :label="lan['完成率']" :align="'center'" />
-            </el-table-column>
-            <el-table-column :label="lan['时光科技']" :align="'center'">
-                <el-table-column prop="eeT" :label="lan['完结']" :align="'center'" />
-                <el-table-column prop="eeNoT" :label="lan['未完结']" :align="'center'" />
-                <el-table-column prop="eeFP" :label="lan['完成率']" :align="'center'" />
-            </el-table-column>
-            <el-table-column :label="lan['古中山']" :align="'center'">
-                <el-table-column prop="ffT" :label="lan['完结']" :align="'center'" />
-                <el-table-column prop="ffNoT" :label="lan['未完结']" :align="'center'" />
-                <el-table-column prop="ffFP" :label="lan['完成率']" :align="'center'" />
-            </el-table-column>
+            <el-table-column prop="poorO" :label="lan['不良率']" width="90" :align="'center'" />
         </el-table>
-        <!-- <ChartModule v-if="isChart" :year="Date.now()" :orgName="''" :chartData="chartData" v-on:close="isChart = false" /> -->
-        <EchartsModule v-if="isChart" :title="title" :subtitle="subtitle+' '+orgName" :chartData="chartData" v-on:close="isChart = false" />
+        <EchartsModule v-if="isChart" :year="Date.now()" :orgName="''" :chartData="chartData" v-on:close="isChart = false" />
     </div>
 </template>
 
@@ -83,17 +60,16 @@ import { useRoute, useRouter } from 'vue-router'
 import { useState, changePropertyValue } from '../store';
 import { getQueryVariable, getLocalTime, createMsg, getCurrentMonthZero, getDays, getMonthTimestamp, thousands } from '../util/ADS';
 import { supplierMS, org } from '../util/api';
-import ChartModule from '../components/ChartModule.vue';
 import EchartsModule from '../components/EchartsModule.vue';
 
 export default {
     components: {
-        ChartModule, EchartsModule,
+        EchartsModule,
     },
-    name: 'catalogMonthReport',
+    name: 'imageRemarkReport',
     props: ['id'],
     setup(props, context) {
-        const { userKey, siteKey, userRole, orgKey, lan, sidebarW } = toRefs(useState());
+        const { userKey, siteKey, userRole, orgKey, lan, sidebarW, lanType } = toRefs(useState());
         const router = useRouter();
         const id = props.id;
 
@@ -101,6 +77,14 @@ export default {
 
 		const startTime = ref('');
 		const endTime = ref('');
+        const accountTime = ref(3);
+        const accountTimeList = ref([
+            {'label': lan.value['日'], 'value': 1},
+            {'label': lan.value['周'], 'value': 2},
+            {'label': lan.value['月'], 'value': 3},
+        ]);
+        const orgKeyN = ref('');
+        const orgList = ref([]);
         
         const tableData = ref([]);
         const chartData = ref({'labels': [], 'data': [], 'label': []});
@@ -108,47 +92,70 @@ export default {
         const getDataList = async () => {
             tableData.value = [];
 			changePropertyValue('isLoading', true);
-            const result = await supplierMS.GCOverStatisticsAllOrg({
+            const result = await supplierMS.errorCausesAnalysis({
+                'orgKey': orgKeyN.value,
                 'startTime': startTime.value ? new Date(startTime.value).getTime() : '',
                 'endTime': endTime.value ? new Date(endTime.value).getTime()+getDays(new Date(endTime.value).getTime())-1 : '',
+                'accountTime': accountTime.value,
             });
             changePropertyValue('isLoading', false);
 			if(result.status == 200){
+                let a = 0, b = 0, c = 0, d = 0, e = 0, f = 0, g = 0, h = 0, i = 0, inStoreTotalNumber = 0;
                 tableData.value = result.data.map((ele) => {
-                    if(ele.englishName == '数据汇总'){
-                        ele.englishName = lan.value[ele.englishName];
+                    if(ele.year){
+                        ele.time = ele.year+(ele.month <= 9 ? '0'+ele.month : ''+ele.month);
+                    }else if(ele.eTime){
+                        ele.time = getLocalTime(ele.sTime, '/', 1) + '~' + getLocalTime(ele.eTime, '/', 1);
                     }else{
-                        ele.englishName = ele.year+''+(ele.month <= 9 ? '0'+ele.month : ele.month);
+                        ele.time = getLocalTime(ele.sTime, '/', 1);
                     }
 
-                    ele.allOrgNumberFP = ele.allOrgNumberFP ? (ele.allOrgNumberFP*100).toFixed(2)+'%' : '0%';
-                    ele.aaFP = ele.aaFP ? (ele.aaFP*100).toFixed(2)+'%' : '0%';
-                    ele.bbFP = ele.bbFP ? (ele.bbFP*100).toFixed(2)+'%' : '0%';
-                    ele.bbcFP = ele.bbcFP ? (ele.bbcFP*100).toFixed(2)+'%' : '0%';
-                    ele.ccFP = ele.ccFP ? (ele.ccFP*100).toFixed(2)+'%' : '0%';
-                    ele.ddFP = ele.ddFP ? (ele.ddFP*100).toFixed(2)+'%' : '0%';
-                    ele.eeFP = ele.eeFP ? (ele.eeFP*100).toFixed(2)+'%' : '0%';
-                    ele.ffFP = ele.ffFP ? (ele.ffFP*100).toFixed(2)+'%' : '0%';
+                    if(ele.organizationNo){
 
-                    ele.allOrgNumberT = thousands(ele.allOrgNumber);
-                    ele.aaT = thousands(ele.aa);
-                    ele.bbT = thousands(ele.bb);
-                    ele.bbcT = thousands(ele.bbc);
-                    ele.ccT = thousands(ele.cc);
-                    ele.ddT = thousands(ele.dd);
-                    ele.eeT = thousands(ele.ee);
-                    ele.ffT = thousands(ele.ff);
+                    }else{
+                        ele.organizationNo = lan.value['全部机构'];
+                    }
 
-                    ele.allOrgNumberNoT = thousands(ele.allOrgNumberNo);
-                    ele.aaNoT = thousands(ele.aaNo);
-                    ele.bbNoT = thousands(ele.bbNo);
-                    ele.bbcNoT = thousands(ele.bbcNo);
-                    ele.ccNoT = thousands(ele.ccNo);
-                    ele.ddNoT = thousands(ele.ddNo);
-                    ele.eeNoT = thousands(ele.eeNo);
-                    ele.ffNoT = thousands(ele.ffNo);
+                    a = a + (ele['模糊'] || 0);
+                    b = b + (ele['缺页'] || 0);
+                    c = c + (ele['重复'] || 0);
+                    d = d + (ele['有异物'] || 0);
+                    e = e + (ele['不完整'] || 0);
+                    f = f + (ele['非家谱影像'] || 0);
+                    g = g + (ele['影像歪斜'] || 0);
+                    h = h + (ele['其他'] || 0);
+                    i = i + (ele.poor || 0);
+                    inStoreTotalNumber = inStoreTotalNumber + (ele.inStoreTotalNumber || 0);
+
+
+
+                    ele['模糊'] = ele['模糊'] ? (100*ele['模糊']/ele.inStoreTotalNumber).toFixed(2)+'%' : '0%';
+                    ele['缺页'] = ele['缺页'] ? (100*ele['缺页']/ele.inStoreTotalNumber).toFixed(2)+'%' : '0%';
+                    ele['重复'] = ele['重复'] ? (100*ele['重复']/ele.inStoreTotalNumber).toFixed(2)+'%' : '0%';
+                    ele['有异物'] = ele['有异物'] ? (100*ele['有异物']/ele.inStoreTotalNumber).toFixed(2)+'%' : '0%';
+                    ele['不完整'] = ele['不完整'] ? (100*ele['不完整']/ele.inStoreTotalNumber).toFixed(2)+'%' : '0%';
+                    ele['非家谱影像'] = ele['非家谱影像'] ? (100*ele['非家谱影像']/ele.inStoreTotalNumber).toFixed(2)+'%' : '0%';
+                    ele['影像歪斜'] = ele['影像歪斜'] ? (100*ele['影像歪斜']/ele.inStoreTotalNumber).toFixed(2)+'%' : '0%';
+                    ele['其他'] = ele['其他'] ? (100*ele['其他']/ele.inStoreTotalNumber).toFixed(2)+'%' : '0%';
+                    ele.poorO = ele.poor ? (100*(ele.poor/ele.inStoreTotalNumber)).toFixed(2)+'%' : '0%';
+
+                    ele.inStoreTotalNumberO = thousands(ele.inStoreTotalNumber);
                     
                     return ele;
+                });
+
+                tableData.value.push({
+                    'time': lan.value['合计'], 
+                    'inStoreTotalNumberO': thousands(inStoreTotalNumber),
+                    '模糊': a ? (100*a/inStoreTotalNumber).toFixed(2)+'%' : '0%', 
+                    '缺页': b ? (100*b/inStoreTotalNumber).toFixed(2)+'%' : '0%', 
+                    '重复': c ? (100*c/inStoreTotalNumber).toFixed(2)+'%' : '0%', 
+                    '有异物': d ? (100*d/inStoreTotalNumber).toFixed(2)+'%' : '0%', 
+                    '不完整': e ? (100*e/inStoreTotalNumber).toFixed(2)+'%' : '0%', 
+                    '非家谱影像': f ? (100*f/inStoreTotalNumber).toFixed(2)+'%' : '0%', 
+                    '影像歪斜': g ? (100*g/inStoreTotalNumber).toFixed(2)+'%' : '0%', 
+                    '其他': h ? (100*h/inStoreTotalNumber).toFixed(2)+'%' : '0%',
+                    'poorO': i ? (100*i/inStoreTotalNumber).toFixed(2)+'%' : '0%',
                 });
 
                 let chartDataO = {'labels': [], 'data': [], 'label': [lan.value['寻源堂'], lan.value['成蹊'], lan.value['馨里有谱'], lan.value['仰沁'], lan.value['良友科苑'], lan.value['时光科技'], lan.value['古中山']]};
@@ -184,23 +191,28 @@ export default {
 
         // 机构
         let orgKeyO = {};
-        const orgName = ref('');
         const getOrgList = async () => {
             const result = await org.getOrgList(siteKey.value, '');
             if(result.status == 200){
-                result.data.map((ele) => {
-                    orgKeyO[ele.organizationNo] = ele._key
+                orgList.value = result.data.map((ele) => {
+                    ele.label = lanType.value == 'en' ? ele.organizationNo : ele.name;
+                    ele.value = ele._key;
+                    return ele;
                 });
+                orgList.value.unshift({'label': lan.value['全部机构'], 'value': ''});
             }
         }
 
         // 切换页面
         const routeList = ref([
-            {'label': '按编目汇总', 'value': '/catalogReport'}, 
-            {'label': '按机构汇总', 'value': '/catalogMonthReport'}, 
-            {'label': '机构编目准确率统计表', 'value': '/catalogEditReport'},
+            {'label': '按影像汇总', 'value': '/imageGather'}, 
+            {'label': '按机构汇总', 'value': '/imagesMonthReport'}, 
+            {'label': '影像准确率', 'value': '/imageRemarkReport'},
+            {'label': '月提交量统计', 'value': '/SupplierMonthSubmit'},
+            {'label': '供应商贡献度', 'value': '/SupplierContribution'},
+            {'label': '审核状态统计', 'value': '/MonthVolumeSubmit'},
         ]);
-        const routeType = ref('/catalogMonthReport');
+        const routeType = ref('/imageRemarkReport');
         watch(routeType, (nv, ov) => {
             router.push(nv);
         });
@@ -208,9 +220,14 @@ export default {
         const isChart = ref(false);
 
         onMounted(() => {
+            if(userRole.value >= 1 && userRole.value <= 3){
+
+            }else{
+                orgKeyN.value = orgKey.value;
+            }
+
             startTime.value = getCurrentMonthZero();
             endTime.value = getCurrentMonthZero(0);
-            subtitle.value = getLocalTime(startTime.value, '/', 2) + '-' + getLocalTime((endTime.value), '/', 2);
 
             tableH.value = window.innerHeight - 100;
 
@@ -218,43 +235,15 @@ export default {
             getDataList();
         });
 
-        // 单元格点击 
-        const handleCellClick = (row, column) => {
-            console.log(row, column);
-            let orgKey = '', startTimes = '', endTimes = '';
-
-            if(row == 'englishName'){
-                return;
-            }
-            if(row != 'allOrgNumber'){
-                orgKey = orgKeyO[row];
-            }
-
-            if(column.englishName != '数据汇总'){
-                if(startTime.value && endTime.value){
-                    startTimes = getMonthTimestamp(column.year, column.month).firstDayTimestamp;
-                    endTimes = getMonthTimestamp(column.year, column.month).lastDayTimestamp;
-                }else{
-                    startTimes = '';
-                    endTimes = '';
-                }
-            }else{
-                startTimes = startTime.value ? new Date(startTime.value).getTime() : '';
-                endTimes = endTime.value ? new Date(endTime.value).getTime()+getDays(new Date(endTime.value).getTime())-1 : '';
-            }
-
-            window.open('/imageStatistics?orgKey='+orgKey+'&startTime='+startTimes+'&endTime='+endTimes+'&isAll=1');
-        }
-
         // 下载
         const initDownloadExcel = () => {
             let aoa = [], t = [];
-            ['年度月份', '汇总数据', '寻源堂', '成蹊', '馨里有谱', '仰沁', '良友科苑', '时光科技', '古中山'].forEach((ele) => {
+            ['年度月份', '机构名称', '已完成总册数', '模糊', '缺页', '重复', '有异物', '不完整', '非家谱影像', '影像歪斜', '其他'].forEach((ele) => {
                 t.push(lan.value[ele]);
             });
             aoa.push(t);
             tableData.value.forEach((ele) => {
-                aoa.push([ele.englishName, ele.allOrgNumber, ele.aa, ele.bb, ele.bbc, ele.cc, ele.dd, ele.ee, ele.ff]);
+                aoa.push([ele.time, ele.organizationNo, ele.inStoreTotalNumberO, ele['模糊'], ele['缺页'], ele['重复'], ele['有异物'], ele['不完整'], ele['非家谱影像'], ele['影像歪斜'], ele['其他']]);
             });
             /** 
             * 将一个sheet转成最终的excel文件的blob对象，然后利用URL.createObjectURL下载
@@ -312,23 +301,14 @@ export default {
             (function aoa_to_sheet(aoa){
                 let XLSX = window.XLSX;
                 var sheet = XLSX.utils.aoa_to_sheet(aoa);
-                openDownloadDialog(sheet2blob(sheet), lan.value['编目月度汇总']+'.xlsx');
+                openDownloadDialog(sheet2blob(sheet), lan.value['影像准确率']+'.xlsx');
             })(aoa)
         }
 
-        const title = ref(lan.value['编目月度汇总']);
-        const subtitle = ref('');
-        watch(startTime, (nv, ov) => {
-            subtitle.value = getLocalTime(startTime.value, '/', 2) + '-' + getLocalTime((endTime.value), '/', 2);
-        });
-        watch(endTime, (nv, ov) => {
-            subtitle.value = getLocalTime(startTime.value, '/', 2) + '-' + getLocalTime((endTime.value), '/', 2);
-        });
-
         return {
             tableData, getDataList, isChart, userRole, startTime, endTime,
-			chartData, lan, sidebarW, routeList, routeType, handleCellClick, 
-            initDownloadExcel, tableH, title, subtitle, orgName,
+			chartData, lan, sidebarW, routeList, routeType, orgList, orgKeyN,
+            initDownloadExcel, tableH, accountTime, accountTimeList
         }
     }
 }

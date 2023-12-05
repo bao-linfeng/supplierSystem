@@ -29,13 +29,13 @@ export default {
         const changePage = (i) => {
             if(i == 'prev'){
                 if(page.value > 1){
-                    page.value = page.value - 1;
+                    page.value = Number(page.value) - 1;
                 }else{
                     return;
                 }
             }else if(i == 'next'){
                 if(page.value < props.pages){
-                    page.value = page.value + 1;
+                    page.value = Number(page.value) + 1;
                 }else{
                     return;
                 }

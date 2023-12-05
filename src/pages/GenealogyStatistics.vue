@@ -46,7 +46,7 @@
 import { ref, reactive, onMounted, watch, watchEffect, computed, provide,readonly, toRefs } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useState, changePropertyValue } from '../store';
-import { getQueryVariable, getLocalTime } from '../util/ADS';
+import { getQueryVariable, getLocalTime, getLastYearTodayTimestamp, getNowTimestamp, thousands } from '../util/ADS';
 import { supplierMS, org } from '../util/api';
 import PaginationModule from '../components/PaginationModule.vue';
 
@@ -66,13 +66,13 @@ export default {
         const total = ref(0);
         const limit = ref(30);
 
-        const theadV = ref(['文件标题', '机构名称', '审核人', '日期', '提交谱数', '可拍摄谱数', '重复谱数', '待议谱数', '无效谱数', '可拍率', '重复率', '待议谱率']);
-        const parameterV = ref(['fileName', 'orgName', 'checkUserName', 'createTimeO', 'totalNumber', 'nfNumber', 'duplicateNumber', 'toBeRediscussedNummber', 'invalidNumber', 'passRateO', 'notPassRateO', 'toBeRediscussedNummberO']);
+        const theadV = ref(['文件标题', '机构名称', '审核人', '审核时间', '日期', '提交谱数', '可拍摄谱数', '重复谱数', '待议谱数', '无效谱数', '作废谱数','可拍率', '重复率', '待议谱率']);
+        const parameterV = ref(['fileName', 'orgName', 'checkUserName', 'passTimeO', 'createTimeO', 'totalNumber', 'nfNumber', 'duplicateNumber', 'toBeRediscussedNummber', 'invalidNumber', 'cancelNumber','passRateO', 'notPassRateO', 'toBeRediscussedNummberO']);
 
         const orgList = ref([]);
         const orgKeyN = ref('');
-        const startTime = ref(Date.now() - 1000*60*60*24*30*6);
-        const endTime = ref(Date.now());
+        const startTime = ref('');
+        const endTime = ref('');
         const time = ref('');
         const getGcVerifyDetail = async (f = true) => {
 			changePropertyValue('isLoading', true);
@@ -89,14 +89,32 @@ export default {
 
 					ele.organizationNo = ele.organizationNo ? ele.organizationNo +'('+ele.orgName+')' : '';
                     ele.createTimeO = ele.createTime ? getLocalTime(ele.createTime, '-', 1) : '';
+                    ele.passTimeO = ele.passTime ? getLocalTime(ele.passTime, '-', 1) : '';
                     ele.passRateO = ele.nfNumber ? ((ele.nfNumber/ele.totalNumber)*100).toFixed(2)+'%' : '0.00%';
                     ele.notPassRateO = ele.duplicateNumber ? ((ele.duplicateNumber/ele.totalNumber)*100).toFixed(2)+'%' : '0.00%';
                     ele.toBeRediscussedNummberO = ele.toBeRediscussedNummber ? ((ele.toBeRediscussedNummber/ele.totalNumber)*100).toFixed(2)+'%' : '0.00%';
+
+                    ele.totalNumber = thousands(totalNumber);
+                    ele.nfNumber = thousands(nfNumber);
+                    ele.duplicateNumber = thousands(duplicateNumber);
+                    ele.toBeRediscussedNummber = thousands(toBeRediscussedNummber);
+                    ele.invalidNumber = thousands(invalidNumber);
+
                     return ele; 
                 });
-                tbody.value.push({'fileName': lan.value['本页小计'], 'toBeRediscussedNummberO': toBeRediscussedNummber ? ((toBeRediscussedNummber/totalNumber)*100).toFixed(2)+'%' : '0.00%', 'passRateO': nfNumber ? ((nfNumber/totalNumber)*100).toFixed(2)+'%' : '0.00%', 'notPassRateO': duplicateNumber ? ((duplicateNumber/totalNumber)*100).toFixed(2)+'%' : '0.00%', 'totalNumber': totalNumber, 'nfNumber': nfNumber, 'duplicateNumber': duplicateNumber, 'toBeRediscussedNummber': toBeRediscussedNummber, 'invalidNumber': invalidNumber});
+                tbody.value.push({
+                    'fileName': lan.value['本页小计'], 
+                    'toBeRediscussedNummberO': toBeRediscussedNummber ? ((toBeRediscussedNummber/totalNumber)*100).toFixed(2)+'%' : '0.00%', 
+                    'passRateO': nfNumber ? ((nfNumber/totalNumber)*100).toFixed(2)+'%' : '0.00%', 
+                    'notPassRateO': duplicateNumber ? ((duplicateNumber/totalNumber)*100).toFixed(2)+'%' : '0.00%', 
+                    'totalNumber': thousands(totalNumber), 
+                    'nfNumber': thousands(nfNumber), 
+                    'duplicateNumber': thousands(duplicateNumber), 
+                    'toBeRediscussedNummber': thousands(toBeRediscussedNummber), 
+                    'invalidNumber': thousands(invalidNumber)
+                });
                 pages.value = result.data.pageNum;
-                total.value = result.data.total;
+                total.value = thousands(result.data.total);
                 f ? gcVerifyDetailTotal() : null; 
             }
         }
@@ -105,7 +123,19 @@ export default {
             const result = await supplierMS.gcVerifyDetailTotal(orgKeyN.value, siteKey.value, startTime.value, endTime.value, page.value , limit.value);
             if(result.status == 200){
                 let data = result.data;
-                tbody.value.push({'fileName': lan.value['汇总统计'], 'all': true, 'toBeRediscussedNummberO': data.toBeRediscussedNummber ? ((data.toBeRediscussedNummber/data.totalNumber)*100).toFixed(2)+'%' : '0.00%', 'passRateO': data.nfNumber ? ((data.nfNumber/data.totalNumber)*100).toFixed(2)+'%' : '0.00%', 'notPassRateO': data.duplicateNumber ? ((data.duplicateNumber/data.totalNumber)*100).toFixed(2)+'%' : '0.00%', 'totalNumber': data.totalNumber, 'nfNumber': data.nfNumber, 'duplicateNumber': data.duplicateNumber, 'toBeRediscussedNummber': data.toBeRediscussedNummber, 'invalidNumber': data.invalidNumber});
+                tbody.value.push({
+                    'fileName': lan.value['汇总统计'], 
+                    'all': true, 
+                    'cancelNumber': thousands(data.cancelNumber), 
+                    'toBeRediscussedNummberO': data.toBeRediscussedNummber ? ((data.toBeRediscussedNummber/data.totalNumber)*100).toFixed(2)+'%' : '0.00%', 
+                    'passRateO': data.nfNumber ? ((data.nfNumber/data.totalNumber)*100).toFixed(2)+'%' : '0.00%', 
+                    'notPassRateO': data.duplicateNumber ? ((data.duplicateNumber/data.totalNumber)*100).toFixed(2)+'%' : '0.00%', 
+                    'totalNumber': thousands(data.totalNumber), 
+                    'nfNumber': thousands(data.nfNumber), 
+                    'duplicateNumber': thousands(data.duplicateNumber), 
+                    'toBeRediscussedNummber': thousands(data.toBeRediscussedNummber), 
+                    'invalidNumber': thousands(data.invalidNumber)
+                });
             }
         }
 
@@ -128,12 +158,11 @@ export default {
         watch(time, (nv, ov) => {
             if(nv){
                 startTime.value = new Date(nv[0]).getTime();
-                endTime.value = new Date(nv[1]).getTime();
+                endTime.value = new Date(nv[1]).getTime() + 24*60*60*1000 - 1;
             }else{
-                startTime.value = Date.now() - 1000*60*60*24*30*6;
-                endTime.value = Date.now();
+                startTime.value = getLastYearTodayTimestamp();
+                endTime.value = getNowTimestamp(1) - 1;
             }
-            
         });
 
         const changePage = (i) => {
@@ -149,6 +178,11 @@ export default {
             }else{
                 orgKeyN.value = orgKey.value;
             }
+            
+            time.value = [getLastYearTodayTimestamp(), getNowTimestamp()];
+            startTime.value = getLastYearTodayTimestamp();
+            endTime.value = getNowTimestamp(1) - 1;
+
             getOrgList();
             handleSearch();
         });

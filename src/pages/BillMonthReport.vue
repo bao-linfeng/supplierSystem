@@ -94,7 +94,7 @@
 import { ref, reactive, onMounted, watch, watchEffect, computed, provide,readonly, toRefs } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useState, changePropertyValue } from '../store';
-import { getQueryVariable, getLocalTime, createMsg, getCurrentMonthZero, getDays, getMonthTimestamp, downliadLink } from '../util/ADS';
+import { getQueryVariable, getLocalTime, createMsg, getCurrentMonthZero, getDays, getMonthTimestamp, downliadLink, thousands } from '../util/ADS';
 import { supplierMS, org } from '../util/api';
 import ChartModule from '../components/ChartModule.vue';
 import BillStatisticsModule from '../components/BillStatisticsModule.vue';
@@ -118,10 +118,11 @@ export default {
             {'label': '发票编号', 'value': 'billNo', 'sort': false, 'sortType': 'auto', 'sortBy': 'billNo'},
             {'label': '发票提交时间', 'value': 'createTimeO', 'sort': true, 'sortType': 'auto', 'sortBy': 'createTime'},
             {'label': '发票审核通过时间', 'value': 'billPassTimeO', 'sort': true, 'sortType': 'auto', 'sortBy': 'billPassTime'},
-            {'label': '提交谱数', 'value': 'gcNumber', 'sort': false, 'sortType': '', 'sortBy': ''},
-            {'label': '卷数', 'value': 'volumeNumber', 'sort': false, 'sortType': '', 'sortBy': ''},
-            {'label': '影像页数', 'value': 'imgNumber', 'sort': false, 'sortType': '', 'sortBy': ''},
+            {'label': '提交谱数', 'value': 'gcNumberT', 'sort': false, 'sortType': '', 'sortBy': ''},
+            {'label': '卷数', 'value': 'volumeNumberT', 'sort': false, 'sortType': '', 'sortBy': ''},
+            {'label': '影像页数', 'value': 'imgNumberT', 'sort': false, 'sortType': '', 'sortBy': ''},
             {'label': '金额小计', 'value': 'amountO', 'sort': false, 'sortType': '', 'sortBy': ''},
+            {'label': '实付金额', 'value': 'paidInAmountO', 'sort': false, 'sortType': '', 'sortBy': ''},
             {'label': '发票状态', 'value': 'billStatusO', 'sort': false, 'sortType': '', 'sortBy': ''},
             {'label': '操作', 'value': 'action', 'sort': false, 'sortType': '', 'sortBy': ''},
         ]);
@@ -223,7 +224,8 @@ export default {
                 let gcNumber = 0, volumeNumber = 0, imgNumber = 0, amount = 0, billNumber = 0;
                 tbody.value = result.data.map((ele) => {
                     ele.name = lanType.value == 'en' ? ele.englishName : ele.orgName;
-                    ele.amountO = '$'+ele.amount;
+                    ele.amountO = '$'+thousands(ele.amount);
+                    ele.paidInAmountO = '$'+thousands(ele.amount + ele.deductionAmount);
                     ele.billStatusO = lan.value[billStatusO.value[ele.billStatus]];
                     ele.createTimeO = getLocalTime(ele.createTime, '/', 1);
                     ele.billPassTimeO = getLocalTime(ele.billPassTime, '/', 1);
@@ -233,10 +235,22 @@ export default {
                     amount = ele.amount + amount;
                     billNumber = billNumber + 1;
 
+                    ele.gcNumberT = thousands(ele.gcNumber);
+                    ele.volumeNumberT = thousands(ele.volumeNumber);
+                    ele.imgNumberT = thousands(ele.imgNumber);
+
                     return ele;
                 });
 
-                tbody.value.push({'name': lan.value['本页小计'], 'billNo': billNumber, 'all': true, 'gcNumber': gcNumber, 'volumeNumber': volumeNumber, 'imgNumber': imgNumber, 'amountO': '$'+amount.toFixed(2)});
+                tbody.value.push({
+                    'name': lan.value['本页小计'], 
+                    'billNo': billNumber, 
+                    'all': true, 
+                    'gcNumberT': thousands(gcNumber), 
+                    'volumeNumberT': thousands(volumeNumber), 
+                    'imgNumberT': thousands(imgNumber), 
+                    'amountO': '$'+thousands(amount.toFixed(2))
+                });
 
                 let chartDataO = {'labels': [], 'data': [], 'label': [lan.value['寻源堂'], lan.value['成蹊'], lan.value['馨里有谱'], lan.value['仰沁'], lan.value['良友科苑'], lan.value['时光科技'], lan.value['古中山']]};
                 let all = [], aa = [], bb = [], bbc = [], cc = [], dd = [], ee = [], ff =[];
@@ -432,10 +446,14 @@ export default {
                 'orgKey': orgKeyN.value.join(','),
                 'billStatus': billStatus.value.join(','),
                 'status': status.value.join(','),
+                'lanType': lanType.value,
+
             });
             changePropertyValue('isLoading', false);
 			if(result.status == 200){
                 downliadLink(result.result);
+            }else{
+                createMsg(result.msg);
             }
         }
 
@@ -463,10 +481,13 @@ export default {
                 'orgKey': '',
                 'billStatus': '',
                 'status': '',
+                'lanType': lanType.value,
             });
             changePropertyValue('isLoading', false);
 			if(result.status == 200){
                 downliadLink(result.result);
+            }else{
+                createMsg(result.msg);
             }
         }
 

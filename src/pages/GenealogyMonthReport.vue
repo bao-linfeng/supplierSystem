@@ -55,7 +55,10 @@
                 </tbody>
             </table>
         </div>
-        <ChartModule v-if="isChart" :year="Date.now()" :orgName="''" :chartData="chartData" v-on:close="isChart = false" />
+        <!-- <ChartModule v-if="isChart" :year="Date.now()" :orgName="''" :chartData="chartData" v-on:close="isChart = false" /> -->
+        <EchartsModule v-if="isChart && statisticalLatitude >= 3" :year="Date.now()" :orgName="orgName" :chartData="chartData" v-on:close="isChart = false" />
+        <!-- 饼状图 -->
+        <Pie v-if="isChart && statisticalLatitude <= 2" :title="statisticalLatitudeL" :subtitle="subtitle" :chartData="chartData" v-on:close="isChart = false" />
     </div>
 </template>
 
@@ -63,13 +66,15 @@
 import { ref, reactive, onMounted, watch, watchEffect, computed, provide,readonly, toRefs } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useState, changePropertyValue } from '../store';
-import { getQueryVariable, getLocalTime, createMsg, getCurrentMonthZero, getDays } from '../util/ADS';
+import { getQueryVariable, getLocalTime, createMsg, getCurrentMonthZero, getDays, thousands } from '../util/ADS';
 import { supplierMS, org } from '../util/api';
 import ChartModule from '../components/ChartModule.vue';
+import EchartsModule from '../components/EchartsModule.vue';
+import Pie from '../components/Echarts/Pie.vue';
 
 export default {
     components: {
-        ChartModule, 
+        ChartModule, EchartsModule, Pie, 
     },
     name: 'genealogyMonthReport',
     props: ['id'],
@@ -79,7 +84,7 @@ export default {
         const id = props.id;
 
         const theadV = ref(['年度月份', '数据汇总', '寻源堂', '成蹊', '馨里有谱', '仰沁', '良友科苑', '时光科技', '古中山']);
-        const parameterV = ref(['englishName', 'allOrgNumber', 'aa', 'bb', 'bbc', 'cc', 'dd', 'ee', 'ff']);
+        const parameterV = ref(['englishName', 'allOrgNumberT', 'aaT', 'bbT', 'bbcT', 'ccT', 'ddT', 'eeT', 'ffT']);
 
         const time = ref('');
 		const startTime = ref(Date.now() - 1000*60*60*24*30*11);
@@ -115,6 +120,15 @@ export default {
                     ele.dd = statisticalLatitude.value <= 2 ? ele.dd : (ele.ddT && ele.dd ? ((ele.dd/ele.ddT)*100).toFixed(2)+'%' : '0.00%');
                     ele.ee = statisticalLatitude.value <= 2 ? ele.ee : (ele.eeT && ele.ee ? ((ele.ee/ele.eeT)*100).toFixed(2)+'%' : '0.00%');
                     ele.ff = statisticalLatitude.value <= 2 ? ele.ff : (ele.ffT && ele.ff ? ((ele.ff/ele.ffT)*100).toFixed(2)+'%' : '0.00%');
+
+                    ele.allOrgNumberT = thousands(ele.allOrgNumber);
+                    ele.aaT = thousands(ele.aa);
+                    ele.bbT = thousands(ele.bb);
+                    ele.bbcT = thousands(ele.bbc);
+                    ele.ccT= thousands(ele.cc);
+                    ele.ddT = thousands(ele.dd);
+                    ele.eeT = thousands(ele.ee);
+                    ele.ffT = thousands(ele.ff);
                     return ele;
                 });
 
@@ -123,7 +137,13 @@ export default {
 
                 tbody.value.forEach((ele) => {
                     if(ele.englishName == '数据汇总'){
-
+                        aa = ele.aa;
+                        bb = ele.bb;
+                        bbc = ele.bbc;
+                        cc = ele.cc;
+                        dd = ele.dd;
+                        ee = ele.ee;
+                        ff = ele.ff;
                     }else{
                         chartDataO.labels.push(ele.englishName); 
                         all.push(ele.allOrgNumber);
@@ -137,13 +157,26 @@ export default {
                     }
                 });
                 // chartDataO.data.push(all); 
-                chartDataO.data.push(aa); 
-                chartDataO.data.push(bb); 
-                chartDataO.data.push(bbc); 
-                chartDataO.data.push(cc); 
-                chartDataO.data.push(dd); 
-                chartDataO.data.push(ee); 
-                chartDataO.data.push(ff); 
+                if(statisticalLatitude.value <= 2){
+                    chartDataO.data = [
+                        {'value': aa, 'name': lan.value['寻源堂']}, 
+                        {'value': bb, 'name': lan.value['成蹊']},
+                        {'value': bbc, 'name': lan.value['馨里有谱']}, 
+                        {'value': cc, 'name': lan.value['仰沁']},
+                        {'value': dd, 'name': lan.value['良友科苑']}, 
+                        {'value': ee, 'name': lan.value['时光科技']},
+                        {'value': ff, 'name': lan.value['古中山']}, 
+                    ];
+                }else{
+                    chartDataO.data.push(aa); 
+                    chartDataO.data.push(bb); 
+                    chartDataO.data.push(bbc); 
+                    chartDataO.data.push(cc); 
+                    chartDataO.data.push(dd); 
+                    chartDataO.data.push(ee); 
+                    chartDataO.data.push(ff);
+                }
+                 
                 chartData.value = chartDataO;
             }else{
                 createMsg(result.msg);
@@ -158,6 +191,7 @@ export default {
 			    startTime.value = Date.now() - 1000*60*60*24*30*6;
 			    endTime.value = Date.now();
 			}
+            // subtitle.value = getLocalTime(startTime.value, '/', 2) + '-' + getLocalTime((endTime.value), '/', 2);
         });
 
         const isChart = ref(false);
@@ -170,6 +204,7 @@ export default {
             {'label': '查重待议谱率', 'value': '5'}]);
         const statisticalLatitude = ref('1');
         const statisticalLatitudeL = ref('月度提交谱量');
+        const subtitle = ref('');
 
         watch(statisticalLatitude, (nv, ov) => {
             statisticalLatitudeList.value.forEach((ele) => {
@@ -180,9 +215,17 @@ export default {
 			getDataList();
         });
 
+        watch(startTime, (nv, ov) => {
+            subtitle.value = getLocalTime(startTime.value, '/', 2) + '-' + getLocalTime((endTime.value), '/', 2);
+        });
+        watch(endTime, (nv, ov) => {
+            subtitle.value = getLocalTime(startTime.value, '/', 2) + '-' + getLocalTime((endTime.value), '/', 2);
+        });
+
         onMounted(() => {
             startTime.value = getCurrentMonthZero();
             endTime.value = getCurrentMonthZero(0);
+            subtitle.value = getLocalTime(startTime.value, '/', 2) + '-' + getLocalTime((endTime.value), '/', 2);
             
             getDataList();
         });
@@ -199,7 +242,7 @@ export default {
         });
 
         return {
-            theadV, parameterV, tbody, getDataList, time, isChart, chartData, userRole, startTime, endTime, lan, 
+            theadV, parameterV, tbody, getDataList, time, isChart, chartData, userRole, startTime, endTime, lan, subtitle, 
             statisticalLatitudeList, statisticalLatitude, sidebarW, statisticalLatitudeL, routeList, routeType, isFileTime,
         }
     }

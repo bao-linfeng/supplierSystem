@@ -50,7 +50,7 @@
                     <label class="label" for="">{{lan['附件']}}</label>
                     <div class="file-box">
                         <div class="input-box">
-                            <input v-if="isEdit >= 1 && isEdit <= 2" title="" class="input" type="file" @change="loadFile" />
+                            <input v-if="isEdit >= 1 && isEdit <= 2" title="" class="upload-input" type="file" @change="loadFile" />
                             <i>{{lan['上传文件']}}</i>
                         </div>
                         <div class="download" v-for="(item, index) in enclosure" :key="index">
@@ -252,6 +252,9 @@ export default {
             }
         }
         .input{
+            height: 30px;
+        }
+        .upload-input{
             position: absolute;
             top: 0;
             right: 0;

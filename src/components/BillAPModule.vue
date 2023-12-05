@@ -11,8 +11,8 @@
                     <div class="bill-box">
                         <p>{{lan['发票编码']}}: {{detail.billNo}}</p>
                         <p>{{lan['所属机构']}}: {{lan[detail.orgName]}}</p>
-                        <p>{{lan['影像页数']}}: {{detail.totalImgNumber}}</p>
-                        <p>{{lan['合计金额']}}: ${{detail.totalAmount}}</p>
+                        <p>{{lan['影像页数']}}: {{detail.totalImgNumberO}}</p>
+                        <p>{{lan['合计金额']}}: ${{detail.totalAmountO}}</p>
                     </div>
                     <h3 class="title">{{lan['审批意见']}}</h3>
                     <textarea class="approve-idea" v-model="approvalOpinion" :disabled="isShow"></textarea>
@@ -20,6 +20,23 @@
                         <el-button type="success" @click="approvalBill(1)" :disabled="isShow">{{lan['同意']}}</el-button>
                         <el-button type="danger" @click="approvalBill(2)" :disabled="isShow">{{lan['驳回']}}</el-button>
                         <el-button @click="close(0)">{{lan['取消']}}</el-button>
+                    </div>
+                    <!-- v-if="detail.billHasDeduction || userKey == '1529192644'" -->
+                    <div class="deduction-wrap" v-if="detail.billHasDeduction || userKey == '1529192644'">
+                        <h3 class="title">{{lan['扣款附件']}}</h3>
+                        <a class="annex" v-if="detail.simplePath" :href="baseURL+detail.simplePath" download>{{detail.originalName}}</a>
+                        <div class="input-box" v-if="!detail.billHasDeduction">
+                            <input class="input" type="file" @change="loadFile" />
+                            <i>{{lan['上传文件']}}</i>
+                        </div>
+                        <div class="deduction-box">
+                            <p>{{lan['应付金额']}}: ${{detail.totalAmountO}}</p>
+                            <p class="red">{{lan['卷差额']}}: ${{detail.deductionAmount}}</p>
+                            <p>{{lan['实付金额']}}: ${{detail.paidInAmount}}</p>
+                        </div>
+                        <div class="btn-box" v-if="!detail.billHasDeduction">
+                            <el-button type="success" @click="deductionBill">{{lan['确认扣款']}}</el-button>
+                        </div>
                     </div>
                 </div>
                 <div class="content-right">
@@ -43,8 +60,8 @@
 import { ref, reactive, toRefs, watch, inject, onMounted } from 'vue';
 import { useState, changePropertyValue } from '../store';
 import { useRoute, useRouter } from 'vue-router';
-import { supplierMS } from '../util/api';
-import { getQueryVariable, getLocalTime, createMsg } from '../util/ADS';
+import { supplierMS, upload } from '../util/api';
+import { getQueryVariable, getLocalTime, createMsg, thousands } from '../util/ADS';
 
 export default {
     components: {
@@ -56,7 +73,7 @@ export default {
     emits: ['close', 'save'],
     name: 'billAPModule',
     setup(props, context) {
-        const { baseURL, userKey, siteKey, lan } = toRefs(useState());
+        const { baseURL, userKey, siteKey, lan, lanType } = toRefs(useState());
         const router = useRouter();
 
         const detail = ref({});
@@ -70,6 +87,9 @@ export default {
             changePropertyValue('isLoading', false);
 			if(result.status == 200){
                 detail.value = result.data;
+                detail.value.totalImgNumberO = thousands(detail.value.totalImgNumber);
+                detail.value.totalAmountO = thousands(detail.value.totalAmount);
+                detail.value.paidInAmount = (detail.value.totalAmount + detail.value.deductionAmount).toFixed(2);
                 approvalUserList.value = result.data.approvalUserList.map((ele) => {
                     if(ele.userKey == userKey.value && ele.waitApproval == 1){
                         isShow.value = false;
@@ -77,6 +97,9 @@ export default {
                     ele.approvalTimeO = ele.approvalTime ? getLocalTime(ele.approvalTime) : '';
                     return ele;
                 });
+                if(result.data.status >= 2){
+                    isShow.value = true;
+                }
             }else{
                 createMsg(result.msg);
             }
@@ -107,12 +130,68 @@ export default {
             context.emit('save', '');
         }
 
+        const deductionAmount = ref('');
+
+        const loadFile = async (e) => {
+            let fd = new FormData();
+            fd.append('file', e.target.files[0]);
+            e.target.value = '';
+            const result = await upload.uploadFile(fd);
+            if(result.statusCode == 200){
+                detail.value.filePath = result.filePath;
+                detail.value.simplePath = result.simplePath;
+                detail.value.originalName = result.originalName;
+
+                getDeductionAmount();
+            }else{
+                createMsg(result.msg);
+            }
+        }
+
+        const getDeductionAmount = async () => {
+            changePropertyValue('isLoading', true);
+            const result = await supplierMS.getDeductionAmount({
+                'siteKey': siteKey.value,
+                'filePath': detail.value.filePath,
+                'billKey': props.dataKey,
+                'englishOrChinese': lanType.value == 'en' ? 'english' : 'chinese',
+            });
+            changePropertyValue('isLoading', false);
+			if(result.status == 200){
+                detail.value.deductionAmount = result.result;
+                detail.value.paidInAmount = (detail.value.totalAmount + detail.value.deductionAmount).toFixed(2);
+            }else if(result.status == 201){
+                createMsg(result.msg);
+            }else{
+                console.log();
+            }
+        }
+
+        const deductionBill = async () => {
+            changePropertyValue('isLoading', true);
+            const result = await supplierMS.deductionBill({
+                'siteKey': siteKey.value,
+                'userKey': userKey.value,
+                'filePath': detail.value.filePath,
+                'simplePath': detail.value.simplePath,
+                'originalName': detail.value.originalName,
+                'billKey': props.dataKey,
+                'deductionAmount': detail.value.deductionAmount,
+            });
+            changePropertyValue('isLoading', false);
+			if(result.status == 200){
+                billApprovalProcess();
+            }else{
+                createMsg(result.msg);
+            }
+        }
+
         onMounted(() => {
             billApprovalProcess();
         });
 
         return {
-            close, save, approvalUserList, approvalOpinion, detail, approvalBill, isShow, lan, 
+            close, save, approvalUserList, approvalOpinion, detail, approvalBill, isShow, lan, loadFile, deductionBill, deductionAmount, baseURL, userKey,
         }
     }
 }
@@ -210,6 +289,58 @@ export default {
 .title{
     height: 60px;
     line-height: 60px;
+}
+.deduction-wrap{
+    .deduction-box{
+        height: 30px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-top: 10px;
+        p{
+            border: 1px solid #ddd;
+            border-radius: 3px;
+            padding: 2px 5px;
+            &.red{
+                color: #f00;
+            }
+        }
+    }
+}
+.input-box{
+    position: relative;
+    height: 30px;
+    width: 120px;
+    border: 1px solid #358acd;
+    background: #348acd;
+    border-radius: 5px;
+    overflow: hidden;
+    .input{
+        position: absolute;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        left: 0;
+        opacity: 0;
+        z-index: 100;
+        background: transparent;
+        cursor: pointer;
+    }
+    &.red{
+        border-color: #f00;
+    }
+    i{
+        position: absolute;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        left: 0;
+        line-height: 30px;
+        text-align: center;
+        cursor: pointer;
+        color: #fff;
+        display: block;
+    }
 }
 @media screen  and (max-width: 799px){
     .module-box{

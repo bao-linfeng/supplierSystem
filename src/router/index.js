@@ -26,12 +26,47 @@ const CatalogReport = () => import('../pages/CatalogReport.vue');
 const BillMonthReport = () => import('../pages/BillMonthReport.vue');
 const BillStatistics = () => import('../pages/BillStatistics.vue');
 const Bill = () => import('../pages/Bill.vue');
+const ImageRemarkReport = () => import('../pages/ImageRemarkReport.vue');
+const CatalogEditReport = () => import('../pages/CatalogEditReport.vue');
+const SupplierMonthSubmit = () => import('../pages/SupplierMonthSubmit.vue');
+const SupplierContribution = () => import('../pages/SupplierContribution.vue');
+const MonthVolumeSubmit = () => import('../pages/MonthVolumeSubmit.vue');
 
 const routes = [
     { 
         path: '/', 
         name: 'BootPage',
         component: BootPage,
+        props: true,
+    },
+    { 
+        path: '/MonthVolumeSubmit', 
+        name: 'MonthVolumeSubmit',
+        component: MonthVolumeSubmit,
+        props: true,
+    },
+    { 
+        path: '/SupplierContribution', 
+        name: 'SupplierContribution',
+        component: SupplierContribution,
+        props: true,
+    },
+    { 
+        path: '/SupplierMonthSubmit', 
+        name: 'SupplierMonthSubmit',
+        component: SupplierMonthSubmit,
+        props: true,
+    },
+    { 
+        path: '/catalogEditReport', 
+        name: 'CatalogEditReport',
+        component: CatalogEditReport,
+        props: true,
+    },
+    { 
+        path: '/imageRemarkReport', 
+        name: 'ImageRemarkReport',
+        component: ImageRemarkReport,
         props: true,
     },
     { 

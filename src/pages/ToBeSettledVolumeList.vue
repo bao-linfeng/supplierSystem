@@ -7,7 +7,7 @@
             </div>
             <div class="head-right">
                 <el-checkbox v-if="(userRole < 1 || userRole > 3) && (settlementStatus == 'toBeSettled' || settlementStatus === 'all') && admin == 'admin' && total" v-model="isAllSelect">{{lan['全部选择']}}</el-checkbox>
-                <el-button v-if="(userRole < 1 || userRole > 3) && (settlementStatus == 'toBeSettled' || settlementStatus === 'all') && admin == 'admin' && total" class="marginL10" type="primary" @click="addBillFoxx">{{lan['点击生成发票']}}</el-button>
+                <el-button v-if="(userRole < 1 || userRole > 3) && (settlementStatus == 'toBeSettled' || settlementStatus === 'all') && admin == 'admin' && total" class="marginL10" type="primary" @click="handleaddBill">{{lan['点击生成发票']}}</el-button>
                 <el-button v-if="settlementStatus == 'toBeSettled' || settlementStatus === 'all'" class="marginL10" type="primary" @click="handlePatchVolumes">{{lan['批量不可结算']}}</el-button>
             </div>
         </div>
@@ -19,9 +19,9 @@
                 <el-select class="width150" v-if="userRole >= 1 && userRole <= 3" v-model="orgKeyN" :placeholder="lan['机构筛选']">
                     <el-option v-for="item in orgList" :key="item.value" :label="item.label" :value="item.value" />
                 </el-select>
-                <el-select class="width150" v-if="userRole >= 1 && userRole <= 3" v-model="takeStatus" multiple :placeholder="lan['审核状态']">
+                <!-- <el-select class="width150" v-if="userRole >= 1 && userRole <= 3" v-model="takeStatus" multiple :placeholder="lan['审核状态']">
                     <el-option v-for="item in takeStatusList" :key="item.value" :label="item.label" :value="item.value" />
-                </el-select>
+                </el-select> -->
                 <el-select class="width150" v-model="settlementStatus" :placeholder="lan['结算状态']">
                     <el-option v-for="item in statusList" :key="item.value" :label="item.label" :value="item.value" />
                 </el-select>
@@ -37,14 +37,20 @@
                 <el-select class="width150" v-model="isLeadImages">
                     <el-option v-for="item in isLeadImagesList" :key="item.value" :label="lan[item.label]" :value="item.value" />
                 </el-select>
+                <el-select v-if="['settled', 'nonSettlement'].indexOf(settlementStatus) > -1" class="width150" v-model="condition">
+                    <el-option v-for="item in conditionList" :key="item.value" :label="item.label" :value="item.value" />
+                </el-select>
+                <el-select v-if="['settled'].indexOf(settlementStatus) > -1" class="width150" v-model="hasDeduction">
+                    <el-option v-for="item in hasDeductionList" :key="item.value" :label="item.label" :value="item.value" />
+                </el-select>
                 <el-input class="width150" v-model="price" :placeholder="lan['请输入价格']"></el-input>
                 <el-date-picker
                     class="width250"
                     v-model="time"
                     type="daterange"
                     unlink-panels
-                    :start-placeholder="lan['开始时间']"
-                    :end-placeholder="lan['结束时间']"
+                    :start-placeholder="lan['提交开始时间']"
+                    :end-placeholder="lan['提交结束时间']"
                 />
             </div>
         </div>
@@ -80,6 +86,20 @@
         <SetSettled v-if="isShow == 1" :detail="detail" v-on:close="closeSet" v-on:save="saveSet" />
         <!-- 历史记录 -->
         <SettledHistory v-if="isShow == 2" :vid="detail.volumeKey" v-on:close="closeSet" />
+        <!-- 开发票确认界面 -->
+        <div class="bill-confirm-wrap" v-if="showAddBill">
+            <div class="head-wrap">
+                <h3 class="title">{{lan['开发票']}}</h3>
+            </div>
+            <div class="main-wrap">
+                <p>{{lan['当前选中待开发票']+'：'+toBeSettledResidueTotalO.volumeNumber+lan['卷']+'，'+toBeSettledResidueTotalO.imageNumber+lan['拍']+'，$'+(toBeSettledResidueTotalO.amount).toFixed(2)}}</p>
+                <p>{{lan['剩余未开发票']+'：'+(toBeSettledResidueTotalO.volumeNumberTotal-toBeSettledResidueTotalO.volumeNumber)+lan['卷']+'，'+(toBeSettledResidueTotalO.imageNumberTotal-toBeSettledResidueTotalO.imageNumber)+lan['拍']+'，$'+(toBeSettledResidueTotalO.amountTotal-toBeSettledResidueTotalO.amount).toFixed(2)}}</p>
+            </div>
+            <div class="foot-wrap">
+                <el-button @click="showAddBill = false">{{lan['取消']}}</el-button>
+                <el-button type="primary" @click="addBillFoxx">{{lan['点击生成发票']}}</el-button>
+            </div>
+        </div>
     </div>
 </template>
 
@@ -87,7 +107,7 @@
 import { ref, reactive, onMounted, watch, watchEffect, computed, provide,readonly, toRefs } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useState, changePropertyValue } from '../store';
-import { getQueryVariable, getLocalTime, createMsg, downliadLink } from '../util/ADS';
+import { getQueryVariable, getLocalTime, createMsg, downliadLink, thousands } from '../util/ADS';
 import { supplierMS, org } from '../util/api';
 import PaginationModule from '../components/PaginationModule.vue';
 import SetSettled from '../components/SetSettled.vue';
@@ -104,8 +124,8 @@ export default {
         const router = useRouter();
         const id = props.id;
 
-        const theadV = ref(['checkAll', '机构名称', '提交时间', '谱ID', '谱名', '卷ID', '卷名', '结算页数', '单双拍','电子谱', '结算单价', '结算金额', '审核状态', '结算状态', '审核人', '审核时间']);
-        const parameterV = ref(['checkAll', 'orgName', 'submitTimeO', 'gcKey', 'genealogyName', 'volumeKey', 'volumeNumber', 'imgNumber', 'singleOrTwoO', 'isLeadImagesO', 'priceO', 'amount', 'takeStatusO', 'settlementStatusO', 'userName', 'passTimeO']);
+        const theadV = ref(['checkAll', '机构名称', '最新提交时间', '谱ID', '谱名', '状态','卷ID', '卷名', '结算页数', '单双拍','电子谱', '结算单价', '结算金额', '审核状态', '结算状态', '审核人', '审核时间']);
+        const parameterV = ref(['checkAll', 'orgName', 'submitTimeO', 'gcKey', 'genealogyName', 'condition', 'volumeKey', 'volumeNumber', 'imgNumber', 'singleOrTwoO', 'isLeadImagesO', 'priceO', 'amount', 'takeStatusO', 'settlementStatusO', 'userName', 'passTimeO']);
 
         const page = ref(1);
         const pages = ref(0);
@@ -123,7 +143,23 @@ export default {
         const gcKey = ref('');
         const volumeKey = ref('');
         const price = ref('');
-        let takeStatusO = {'5': 'FS初审', '6': '打回', '7': '通过', '12': '机构审核', '13': 'FS复审', '14': 'FS待议'};
+        const condition = ref('');
+        const hasDeduction = ref('');
+        const conditionList = ref([
+            {'label': lan.value['全部状态'], 'value': ''},
+            {'label': 'f', 'value': 'f'},
+            {'label': 'nf', 'value': 'nf'},
+            {'label': 'd', 'value': 'd'},
+            {'label': 'r', 'value': 'r'},
+            {'label': 'm', 'value': 'm'},
+            {'label': 'c', 'value': 'c'}
+        ]);
+        const hasDeductionList = ref([
+            {'label': lan.value['差额状态'], 'value': ''},
+            {'label': lan.value['已扣款'], 'value': '1'},
+            {'label': lan.value['未扣款'], 'value': '0'},
+        ]);
+        let takeStatusO = {'5': 'FS初审', '6': '打回', '7': '通过', '12': '机构审核', '13': 'FS复审', '14': 'FS待议', '16': '作废'};
         let settlementStatusO = {'5': '结算中', '10': '已结算', '15': '不可结算'};
         
         const getDataList = async (f = true) => {
@@ -131,6 +167,7 @@ export default {
             amountO.value = 0;
             tbody.value = [];
             volumeKeyArr.value = [];
+            showAddBill.value = false;
 			changePropertyValue('isLoading', true);
             const result = await supplierMS.toBeSettled({
                 genealogyName: genealogyName.value, 
@@ -144,9 +181,11 @@ export default {
                 takeStatus: takeStatus.value.join(','), 
                 settlementStatus: settlementStatus.value, 
                 price: price.value,
+                condition: condition.value,
                 page: page.value , 
                 limit: limit.value,
                 siteKey: siteKey.value,
+                hasDeduction: hasDeduction.value,
             });
             changePropertyValue('isLoading', false);
 			if(result.status == 200){
@@ -163,10 +202,12 @@ export default {
                     ele.priceO = '$'+(ele.price || 0);
                     ele.takeStatusO = takeStatusO[ele.takeStatus] ? lan.value[takeStatusO[ele.takeStatus]] : '';
                     ele.settlementStatusO = ele.settlementStatus ? lan.value[settlementStatusO[ele.settlementStatus]] : lan.value['待结算'];
+                    ele.hasDeductionO = !ele.isDifference ? (ele.hasDeduction == 1 ? '已扣款' : '未扣款') : '';
                     list.push(ele.volumeKey);
+                    ele.imgNumberT = thousands(ele.imgNumber);
                     return ele;
                 });
-                tbody.value.push({'orgName': '本页小计', 'imgNumber': imgNumberO.value, 'amount': '$'+(amountO.value).toFixed(2)});
+                tbody.value.push({'orgName': '本页小计', 'imgNumberT': thousands(imgNumberO.value), 'amount': '$'+thousands((amountO.value).toFixed(2))});
                 pages.value = result.result.pageNum;
                 total.value = result.result.total;
 
@@ -194,12 +235,17 @@ export default {
                 orgKey: orgKeyN.value, 
                 takeStatus: takeStatus.value.join(','), 
                 settlementStatus: settlementStatus.value, 
+                condition: condition.value,
                 price: price.value,
                 siteKey: siteKey.value,
+                hasDeduction: hasDeduction.value,
             });
             if(result.status == 200){
+                tbody.value = tbody.value.filter((ele) => {
+                    return ele.orgName != '汇总统计';
+                });
                 let data = result.data;
-                tbody.value.push({'orgName': '汇总统计', 'all': true, 'imgNumber': data.pagesTotal, 'amount' : '$'+data.amountTotal});
+                tbody.value.push({'orgName': '汇总统计', 'all': true, 'imgNumberT': thousands(data.pagesTotal), 'amount' : '$'+thousands(data.amountTotal)});
             }
         }
 
@@ -218,6 +264,9 @@ export default {
                 settlementStatus: settlementStatus.value, 
                 price: price.value,
                 siteKey: siteKey.value,
+                'lanType': lanType.value,
+                condition: condition.value,
+                hasDeduction: hasDeduction.value,
             });
             if(result.status == 200){
                 downliadLink(result.result);
@@ -272,7 +321,7 @@ export default {
 
         const takeStatus = ref(['7']);
         const takeStatusList = ref([
-            // {'label': lan.value['全部审核状态'], 'value': ''},
+            {'label': lan.value['全部审核状态'], 'value': ''},
             {'label': lan.value['机构审核'], 'value': '12'},
             {'label': lan.value['FS初审'], 'value': '5'},
             {'label': lan.value['FS复审'], 'value': '13'},
@@ -296,40 +345,73 @@ export default {
             console.log(volumeKeyArr.value);
         };
 
-        const addBillFoxx = async () => {
+        const showAddBill = ref(false);
+        const toBeSettledResidueTotalO = ref({});
+        const handleaddBill = () => {
             if(isAllSelect.value || volumeKeyArr.value.length){
-                if(confirm('确认要把该批次的卷册影像生成发票吗？')){
-                    changePropertyValue('isLoading', true);
-                    const result = await supplierMS.addBillFoxx({
-                        genealogyName: genealogyName.value, 
-                        gcKey: gcKey.value, 
-                        volumeKey: volumeKey.value, 
-                        startTime: startTime.value, 
-                        endTime: endTime.value, 
-                        singleOrTwo: singleOrTwo.value, 
-                        isLeadImages: isLeadImages.value, 
-                        orgKey: orgKey.value, 
-                        takeStatus: takeStatus.value,
-                        userKey: userKey.value, 
-                        isAllSelect: isAllSelect.value ? 1 : 0, 
-                        volumeKeyArr: volumeKeyArr.value, 
-                        siteKey: siteKey.value, 
-                    });
-                    changePropertyValue('isLoading', false);
-                    if(result.status == 200){
-                        volumeKeyArr.value = [];
-                        isAllSelect.value = false;
-                        getDataList();
-                        if(result.data && result.data.length){
-                            alert(result.data.join()+', 以上卷册生成发票失败，不符合开发票需求！');
-                        }
-
-                    }else{
-                        createMsg(result.msg);
-                    }
-                }
+                toBeSettledResidueTotal();
             }else{
                 createMsg(lan.value['请勾选卷册或全部选择']);
+            }
+        }
+
+        const toBeSettledResidueTotal = async () => {
+            changePropertyValue('isLoading', true);
+            const result = await supplierMS.toBeSettledResidueTotal({
+                genealogyName: genealogyName.value, 
+                gcKey: gcKey.value, 
+                volumeKey: volumeKey.value, 
+                startTime: startTime.value, 
+                endTime: endTime.value, 
+                singleOrTwo: singleOrTwo.value, 
+                isLeadImages: isLeadImages.value, 
+                orgKey: orgKey.value, 
+                takeStatus: takeStatus.value,
+                userKey: userKey.value, 
+                isAllSelect: isAllSelect.value ? 1 : 0, 
+                volumeKeyArr: volumeKeyArr.value, 
+                siteKey: siteKey.value, 
+            });
+            changePropertyValue('isLoading', false);
+            if(result.status == 200){
+                toBeSettledResidueTotalO.value = result.result;
+                showAddBill.value = true;
+            }else{
+                createMsg(result.msg);
+            }
+        }
+
+        const addBillFoxx = async () => {
+            if(confirm('确认要把该批次的卷册影像生成发票吗？')){
+                changePropertyValue('isLoading', true);
+                const result = await supplierMS.addBillFoxx({
+                    genealogyName: genealogyName.value, 
+                    gcKey: gcKey.value, 
+                    volumeKey: volumeKey.value, 
+                    startTime: startTime.value, 
+                    endTime: endTime.value, 
+                    singleOrTwo: singleOrTwo.value, 
+                    isLeadImages: isLeadImages.value, 
+                    orgKey: orgKey.value, 
+                    takeStatus: takeStatus.value,
+                    userKey: userKey.value, 
+                    isAllSelect: isAllSelect.value ? 1 : 0, 
+                    volumeKeyArr: volumeKeyArr.value, 
+                    siteKey: siteKey.value, 
+                });
+                changePropertyValue('isLoading', false);
+                if(result.status == 200){
+                    volumeKeyArr.value = [];
+                    isAllSelect.value = false;
+                    showAddBill.value = false;
+                    getDataList();
+                    if(result.data && result.data.length){
+                        alert(result.data.join()+', 以上卷册生成发票失败，不符合开发票需求！');
+                    }
+
+                }else{
+                    createMsg(result.msg);
+                }
             }
         }
         
@@ -340,23 +422,36 @@ export default {
 
         watch(settlementStatus , (nv, ov) => {
             isAllSelect.value = false;
-            if(nv == 'toBeSettled'){
-                // takeStatus.value = 7;
-                // takeStatusList.value = [
-                //     {'label': lan.value['通过'], 'value': 7},
-                // ];
+            if(['settled', 'nonSettlement'].indexOf(nv) > -1){
+                
             }else{
-                // takeStatus.value = '';
-                // takeStatusList.value = [
-                //     {'label': lan.value['全部审核状态'], 'value': ''},
-                //     {'label': lan.value['机构审核'], 'value': 12},
-                //     {'label': lan.value['FS初审'], 'value': 5},
-                //     {'label': lan.value['FS复审'], 'value': 13},
-                //     {'label': lan.value['FS待议'], 'value': 14},
-                //     {'label': lan.value['打回'], 'value': 6},
-                //     {'label': lan.value['通过'], 'value': 7},
-                // ];
+                condition.value = '';
             }
+
+            if(['settled'].indexOf(nv) > -1){
+                if(userRole.value >= 1 && userRole.value <= 3){
+                    theadV.value = ['checkAll', '发票编号', '机构名称', '最新提交时间', '谱ID', '谱名', '状态', '卷ID', '卷名', '结算页数', '单双拍','电子谱', '结算单价', '结算金额', '审核状态', '结算状态', '审核人', '审核时间', '差额状态', '操作'];
+                    parameterV.value = ['checkAll', 'billNo','orgName', 'submitTimeO', 'gcKey', 'genealogyName', 'condition', 'volumeKey', 'volumeNumber', 'imgNumberT', 'singleOrTwoO', 'isLeadImagesO', 'priceO', 'amount', 'takeStatusO', 'settlementStatusO', 'userName', 'passTimeO', 'hasDeductionO', 'action'];
+                }else{
+                    if(admin.value == 'admin'){
+                        theadV.value = ['checkAll', '发票编号', '机构名称', '最新提交时间', '谱ID', '谱名', '状态', '卷ID', '卷名', '结算页数', '单双拍','电子谱', '结算单价', '结算金额', '审核状态', '结算状态', '审核人', '审核时间', '操作'];
+                        parameterV.value = ['checkAll', 'billNo','orgName', 'submitTimeO', 'gcKey', 'genealogyName', 'condition', 'volumeKey', 'volumeNumber', 'imgNumberT', 'singleOrTwoO', 'isLeadImagesO', 'priceO', 'amount', 'takeStatusO', 'settlementStatusO', 'userName', 'passTimeO', 'action'];
+                    }
+                }
+            }else{
+                hasDeduction.value = '';
+                condition.value = '';
+                if(userRole.value >= 1 && userRole.value <= 3){
+                    theadV.value = ['checkAll', '机构名称', '最新提交时间', '谱ID', '谱名', '状态', '卷ID', '卷名', '结算页数', '单双拍','电子谱', '结算单价', '结算金额', '审核状态', '结算状态', '审核人', '审核时间', '操作'];
+                    parameterV.value = ['checkAll', 'orgName', 'submitTimeO', 'gcKey', 'genealogyName', 'condition', 'volumeKey', 'volumeNumber', 'imgNumberT', 'singleOrTwoO', 'isLeadImagesO', 'priceO', 'amount', 'takeStatusO', 'settlementStatusO', 'userName', 'passTimeO', 'action'];
+                }else{
+                    if(admin.value == 'admin'){
+                        theadV.value = ['checkAll', '机构名称', '最新提交时间', '谱ID', '谱名', '状态', '卷ID', '卷名', '结算页数', '单双拍','电子谱', '结算单价', '结算金额', '审核状态', '结算状态', '审核人', '审核时间', '操作'];
+                        parameterV.value = ['checkAll', 'orgName', 'submitTimeO', 'gcKey', 'genealogyName', 'condition', 'volumeKey', 'volumeNumber', 'imgNumberT', 'singleOrTwoO', 'isLeadImagesO', 'priceO', 'amount', 'takeStatusO', 'settlementStatusO', 'userName', 'passTimeO', 'action'];
+                    }
+                }
+            }
+
             getDataList();
         });
 
@@ -372,15 +467,18 @@ export default {
                     });
                     volumeKeyArr.value = list;
                 }
-                endTime.value = Date.now();
-                startTime.value = endTime.value - 6*30*24*60*60*1000;
-                time.value = [startTime.value, endTime.value];
+                // endTime.value = '';
+                // startTime.value = '';
+                // time.value = '';
+                // endTime.value = Date.now();
+                // startTime.value = endTime.value - 6*30*24*60*60*1000;
+                // time.value = [startTime.value, endTime.value];
                 // console.log(volumeKeyArr.value);
             }else{
                 volumeKeyArr.value = [];
                 endTime.value = '';
                 startTime.value = '';
-                time.value = [];
+                time.value = '';
             }
         });
 
@@ -410,13 +508,13 @@ export default {
         onMounted(() => {
             if(userRole.value >= 1 && userRole.value <= 3){
                 takeStatus.value = [];
-                theadV.value = ['checkAll', '机构名称', '提交时间', '谱ID', '谱名', '卷ID', '卷名', '结算页数', '单双拍','电子谱', '结算单价', '结算金额', '审核状态', '结算状态', '审核人', '审核时间', '操作'];
-                parameterV.value = ['checkAll', 'orgName', 'submitTimeO', 'gcKey', 'genealogyName', 'volumeKey', 'volumeNumber', 'imgNumber', 'singleOrTwoO', 'isLeadImagesO', 'priceO', 'amount', 'takeStatusO', 'settlementStatusO', 'userName', 'passTimeO', 'action'];
+                theadV.value = ['checkAll', '机构名称', '最新提交时间', '谱ID', '谱名', '状态', '卷ID', '卷名', '结算页数', '单双拍','电子谱', '结算单价', '结算金额', '审核状态', '结算状态', '审核人', '审核时间', '操作'];
+                parameterV.value = ['checkAll', 'orgName', 'submitTimeO', 'gcKey', 'genealogyName', 'condition', 'volumeKey', 'volumeNumber', 'imgNumberT', 'singleOrTwoO', 'isLeadImagesO', 'priceO', 'amount', 'takeStatusO', 'settlementStatusO', 'userName', 'passTimeO', 'action'];
             }else{
                 orgKeyN.value = orgKey.value;
                 if(admin.value == 'admin'){
-                    theadV.value = ['checkAll', '机构名称', '提交时间', '谱ID', '谱名', '卷ID', '卷名', '结算页数', '单双拍','电子谱', '结算单价', '结算金额', '审核状态', '结算状态', '审核人', '审核时间', '操作'];
-                    parameterV.value = ['checkAll', 'orgName', 'submitTimeO', 'gcKey', 'genealogyName', 'volumeKey', 'volumeNumber', 'imgNumber', 'singleOrTwoO', 'isLeadImagesO', 'priceO', 'amount', 'takeStatusO', 'settlementStatusO', 'userName', 'passTimeO', 'action'];
+                    theadV.value = ['checkAll', '机构名称', '最新提交时间', '谱ID', '谱名', '状态', '卷ID', '卷名', '结算页数', '单双拍','电子谱', '结算单价', '结算金额', '审核状态', '结算状态', '审核人', '审核时间', '操作'];
+                    parameterV.value = ['checkAll', 'orgName', 'submitTimeO', 'gcKey', 'genealogyName', 'condition', 'volumeKey', 'volumeNumber', 'imgNumberT', 'singleOrTwoO', 'isLeadImagesO', 'priceO', 'amount', 'takeStatusO', 'settlementStatusO', 'userName', 'passTimeO', 'action'];
                 }
             }
             // takeStatusList.value = [
@@ -480,7 +578,8 @@ export default {
             theadV, parameterV, tbody, getDataList, time, orgList, orgKeyN, orgName, statusList, settlementStatus, checkBoxClick, volumeKeyArr,
             changePage, page, pages, total, userRole, isAllSelect, admin, lan, sidebarW, addBillFoxx, imgNumberO, amountO, handlePatchVolumes,
             volumeNumber, genealogyName, takeStatus, takeStatusList, gcKey, volumeKey, checkAllBox, isShow, detail, closeSet, setDetail, saveSet,
-            getHistory, isLeadImages, singleOrTwo, isLeadImagesList, singleOrTwoList, price, isSearch, getDataDownload,
+            getHistory, isLeadImages, singleOrTwo, isLeadImagesList, singleOrTwoList, price, isSearch, getDataDownload, handleaddBill, showAddBill,
+            toBeSettledResidueTotalO, condition, conditionList, hasDeduction, hasDeductionList,
         }
     }
 }
@@ -660,5 +759,30 @@ export default {
     border-radius: 3px;
     min-width: 40px;
     padding: 0 !important;
+}
+.bill-confirm-wrap{
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%,-50%);
+    background-color: #fff;
+    border-radius: 5px;
+    box-shadow: 0 0 1px 3px #ddd;
+    width: 400px;
+    padding: 20px;
+    .head-wrap{
+        height: 30px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+    .main-wrap{
+        margin: 10px 0;
+    }
+    .foot-wrap{
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
 }
 </style>

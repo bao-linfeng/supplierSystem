@@ -67,7 +67,8 @@
                 </tbody>
             </table>
         </div>
-        <ChartModule v-if="isChart" :year="Date.now()" :orgName="orgName" :chartData="chartData" v-on:close="isChart = false" />
+        <!-- <ChartModule v-if="isChart" :year="Date.now()" :orgName="orgName" :chartData="chartData" v-on:close="isChart = false" /> -->
+        <EchartsModule v-if="isChart" :title="title" :subtitle="subtitle+' '+orgName" :chartData="chartData" v-on:close="isChart = false" />
         <ImageListModule v-if="isShow == 1" :timeStr="timeStr" :orgKeyN="orgKeyN" :orgName="orgName"  v-on:close="isShow = 0" />
     </div>
 </template>
@@ -76,14 +77,15 @@
 import { ref, reactive, onMounted, watch, watchEffect, computed, provide,readonly, toRefs } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useState, changePropertyValue } from '../store';
-import { getQueryVariable, getLocalTime, createMsg, getCurrentMonthZero, getDays } from '../util/ADS';
+import { getQueryVariable, getLocalTime, createMsg, getCurrentMonthZero, getDays, thousands } from '../util/ADS';
 import { supplierMS, org } from '../util/api';
 import ChartModule from '../components/ChartModule.vue';
 import ImageListModule from '../components/ImageListModule.vue';
+import EchartsModule from '../components/EchartsModule.vue';
 
 export default {
     components: {
-        ChartModule, ImageListModule, 
+        ChartModule, ImageListModule, EchartsModule,
     },
     name: 'imageGather',
     props: ['id'],
@@ -93,7 +95,7 @@ export default {
         const id = props.id;
 
         const theadV = ref(['月數據', '机构名称', '本月新增谱数', '机构已审拍数', 'FS已审拍数', '已打回拍数']);
-        const parameterV = ref(['englishName', 'orgName', 'claimNumber', 'imageNumberOrg', 'imageNumberFS', 'imageNumberReturn']);
+        const parameterV = ref(['englishName', 'orgName', 'claimNumberT', 'imageNumberOrgT', 'imageNumberFST', 'imageNumberReturnT']);
 
         const orgList = ref([]);
         const orgKeyN = ref('');
@@ -130,6 +132,11 @@ export default {
                     ele.orgName = ele.orgName ? ele.orgName : '全部机构';
                     ele.finishRateO = ele.finishRate ? ele.finishRate+'%' : '';
                     ele.organizationNo = orgKeyN.value ? ele.organizationNo ? ele.organizationNo +'('+ele.orgName+')' : '' : lan.value['全部机构'];
+
+                    ele.imageNumberOrgT = thousands(ele.imageNumberOrg);
+                    ele.claimNumberT = thousands(ele.claimNumber);
+                    ele.imageNumberFST = thousands(ele.imageNumberFS);
+                    ele.imageNumberReturnT = thousands(ele.imageNumberReturn);
                     return ele;
                 });
 
@@ -189,6 +196,7 @@ export default {
 
             startTime.value = getCurrentMonthZero();
             endTime.value = getCurrentMonthZero(0);
+            subtitle.value = getLocalTime(startTime.value, '/', 2) + '-' + getLocalTime((endTime.value), '/', 2);
 
             getOrgList();
             getDataList();
@@ -204,14 +212,30 @@ export default {
             }
         }
 
-        const routeList = ref([{'label': '按影像汇总', 'value': '/imageGather'}, {'label': '按机构汇总', 'value': '/imagesMonthReport'}]);
+        const routeList = ref([
+            {'label': '按影像汇总', 'value': '/imageGather'}, 
+            {'label': '按机构汇总', 'value': '/imagesMonthReport'},
+            {'label': '影像准确率', 'value': '/imageRemarkReport'},
+            {'label': '月提交量统计', 'value': '/SupplierMonthSubmit'},
+            {'label': '供应商贡献度', 'value': '/SupplierContribution'},
+            {'label': '审核状态统计', 'value': '/MonthVolumeSubmit'},
+        ]);
         const routeType = ref('/imageGather');
         watch(routeType, (nv, ov) => {
             router.push(nv);
         });
 
+        const title = ref(lan.value['影像月度汇总']);
+        const subtitle = ref('');
+        watch(startTime, (nv, ov) => {
+            subtitle.value = getLocalTime(startTime.value, '/', 2) + '-' + getLocalTime((endTime.value), '/', 2);
+        });
+        watch(endTime, (nv, ov) => {
+            subtitle.value = getLocalTime(startTime.value, '/', 2) + '-' + getLocalTime((endTime.value), '/', 2);
+        });
+
         return {
-            theadV, parameterV, tbody, getDataList, orgList, orgKeyN, isChart, orgName, userRole, startTime, endTime,
+            theadV, parameterV, tbody, getDataList, orgList, orgKeyN, isChart, orgName, userRole, startTime, endTime, title, subtitle,
 			chartData, lan, sidebarW, handleClickCell, timeStr, isShow, parameterList, routeList, routeType, uploadStartTime, uploadEndTime,
         }
     }

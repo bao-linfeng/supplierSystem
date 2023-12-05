@@ -34,7 +34,7 @@
 import { ref, reactive, onMounted, watch, watchEffect, computed, provide,readonly, toRefs } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useState, changePropertyValue } from '../store';
-import { getQueryVariable, setValue, getValue, createMsg } from '../util/ADS';
+import { getQueryVariable, setValue, getValue, createMsg, thousands } from '../util/ADS';
 import { supplierMS } from '../util/api';
 import { CN } from '../language/CN.js';
 import { EN } from '../language/EN.js';
@@ -81,24 +81,24 @@ export default {
             if(result.status == 200){
                 todo.value.forEach((ele, i) => {
                     if(i === 0){
-                        ele.count = result.data.waitReviewCount;
+                        ele.count = thousands(result.data.waitReviewCount);
                     }
                     if(i === 1){
-                        ele.count = result.data.waitSettlementCount;
+                        ele.count = thousands(result.data.waitSettlementCount);
                     }
                 });
                 dataCount.value.forEach((ele, i) => {
                     if(i === 0){
-                        ele.count = result.data.allGCCount;
+                        ele.count = thousands(result.data.allGCCount);
                     }
                     if(i === 1){
-                        ele.count = result.data.allImageCount;
+                        ele.count = thousands(result.data.allImageCount);
                     }
                     if(i === 2){
-                        ele.count = '$'+(result.data.totalAmount || 0);
+                        ele.count = '$'+thousands(result.data.totalAmount || 0);
                     }
                     if(i === 3){
-                        ele.count = result.data.allImageOrgCount - 1;
+                        ele.count = thousands(result.data.allImageOrgCount - 1);
                     }
                 });
             }

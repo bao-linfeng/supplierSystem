@@ -1,6 +1,6 @@
 <template>
   <div class="app-box">
-    <SidebarModule v-show="!(navActive == '/' || navActive == '/bill') && isShow" />
+    <SidebarModule v-show="!(navActive == '/' || navActive == '/bill' || navActive == '/catalogWorkloadSummary' || navActive == '/catalogSummary') && isShow" />
 	  <Loading v-if="isLoading" />
     <router-view></router-view>
     <img class="menu" src="./assets/menu.svg" @click="isShow = !isShow" v-show="!(navActive == '/' || navActive == '/bill')" />
@@ -10,7 +10,7 @@
 <script>
 import { ref, reactive, onMounted, watch, watchEffect, computed, provide,readonly, inject, toRefs } from 'vue'
 import { useState, changePropertyValue, changeUserInfo } from './store';
-import { createMsg, getValue } from './util/ADS';
+import { createMsg, getValue, setValue } from './util/ADS';
 import SidebarModule from './components/SidebarModule.vue';
 import Loading from './components/Loading.vue';
 import { useRoute, useRouter } from 'vue-router';
@@ -53,6 +53,8 @@ export default {
       console.log(lan);
       if(getValue('lanType')){
         lan = getValue('lanType');
+      }else{
+        // setValue('lanType', lan.indexOf('en') > -1 ? 'en' : 'zh');
       }
 
       if(lan.indexOf('zh') > -1){
@@ -65,6 +67,7 @@ export default {
         changePropertyValue('lan', CN);
         changePropertyValue('lanType', 'zh');
       }
+
     }
 
     const isShow = ref(false);
@@ -441,5 +444,19 @@ input{
 }
 .width180{
   width: 180px !important;
+}
+
+.select-position .select-trigger{
+    position: absolute;
+    z-index: 10000;
+}
+.red-color{
+  color: #f00;
+}
+.el-table th, .el-table tr {
+  background-color: #f5f7fa !important;
+}
+.is-scrolling-none .el-table th, .el-table tr {
+  background-color: #fff !important;
 }
 </style>

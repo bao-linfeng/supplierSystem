@@ -33,7 +33,7 @@ import { ref, reactive, toRefs, watch, inject, onMounted } from 'vue';
 import { useState, changePropertyValue } from '../store';
 import { useRoute, useRouter } from 'vue-router';
 import { supplierMS } from '../util/api';
-import { getQueryVariable, getLocalTime, createMsg } from '../util/ADS';
+import { getQueryVariable, getLocalTime, createMsg, thousands } from '../util/ADS';
 
 export default {
     components: {

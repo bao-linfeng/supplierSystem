@@ -34,27 +34,28 @@
             </div>
         </div>
         <el-table class="el-table-box" :data="tableData" :max-height="tableH">
-            <el-table-column prop="englishName" label="月数据" width="120" />
-            <el-table-column prop="orgName" label="机构名称" />
-            <el-table-column label="谱目数(有影像)">
-                <el-table-column prop="gcNumber" label="谱目条数" />
-                <el-table-column prop="volumeNumber" label="影像册数" />
+            <el-table-column prop="englishName" :label="lan['年度月份']" width="120" :align="'center'" />
+            <el-table-column prop="orgName" :label="lan['机构名称']" :align="'center'" />
+            <el-table-column :label="lan['谱目数(有影像)']" :align="'center'">
+                <el-table-column prop="gcNumberT" :label="lan['谱目条数']" :align="'center'" />
+                <el-table-column prop="volumeNumberT" :label="lan['影像册数']" :align="'center'" />
             </el-table-column>
-            <el-table-column label="编目完结">
-                <el-table-column prop="gcNumberOver" label="谱目条数" />
-                <el-table-column prop="volumeNumberOver" label="影像册数" />
+            <el-table-column :label="lan['编目完结']" :align="'center'">
+                <el-table-column prop="gcNumberOverT" :label="lan['谱目条数']" :align="'center'" />
+                <el-table-column prop="volumeNumberOverT" :label="lan['影像册数']" :align="'center'" />
             </el-table-column>
-            <el-table-column prop="finishPercentO" label="完成率" />
-            <el-table-column label="可索引">
-                <el-table-column prop="gcNumberOverIndex" label="谱目条数" />
-                <el-table-column prop="volumeNumberOverIndex" label="影像册数" />
+            <el-table-column prop="finishPercentO" :label="lan['完成率']" :align="'center'" />
+            <el-table-column :label="lan['可索引']" :align="'center'">
+                <el-table-column prop="gcNumberOverIndexT" :label="lan['谱目条数']" :align="'center'" />
+                <el-table-column prop="volumeNumberOverIndexT" :label="lan['影像册数']" :align="'center'" />
             </el-table-column>
-            <el-table-column label="不可索引">
-                <el-table-column prop="gcNumberOverNoIndex" label="谱目条数" />
-                <el-table-column prop="volumeNumberOverNoIndex" label="影像册数" />
+            <el-table-column :label="lan['不可索引']" :align="'center'">
+                <el-table-column prop="gcNumberOverNoIndexT" :label="lan['谱目条数']" :align="'center'" />
+                <el-table-column prop="volumeNumberOverNoIndexT" :label="lan['影像册数']" :align="'center'" />
             </el-table-column>
         </el-table>
-        <ChartModule v-if="isChart" :year="Date.now()" :orgName="''" :chartData="chartData" v-on:close="isChart = false" />
+        <!-- <ChartModule v-if="isChart" :year="Date.now()" :orgName="''" :chartData="chartData" v-on:close="isChart = false" /> -->
+        <EchartsModule v-if="isChart" :title="title" :subtitle="subtitle+' '+orgNameN" :chartData="chartData" v-on:close="isChart = false" />
     </div>
 </template>
 
@@ -62,18 +63,19 @@
 import { ref, reactive, onMounted, watch, watchEffect, computed, provide,readonly, toRefs } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useState, changePropertyValue } from '../store';
-import { getQueryVariable, getLocalTime, createMsg, getCurrentMonthZero, getDays, getMonthTimestamp } from '../util/ADS';
+import { getQueryVariable, getLocalTime, createMsg, getCurrentMonthZero, getDays, getMonthTimestamp, thousands } from '../util/ADS';
 import { supplierMS, org } from '../util/api';
 import ChartModule from '../components/ChartModule.vue';
+import EchartsModule from '../components/EchartsModule.vue';
 
 export default {
     components: {
-        ChartModule, 
+        ChartModule, EchartsModule,
     },
     name: 'catalogMonthReport',
     props: ['id'],
     setup(props, context) {
-        const { userKey, siteKey, userRole, orgKey, lan, sidebarW, lanType } = toRefs(useState());
+        const { userKey, siteKey, userRole, orgKey, lan, sidebarW, lanType, orgName } = toRefs(useState());
         const router = useRouter();
         const id = props.id;
 
@@ -96,11 +98,7 @@ export default {
 			if(result.status == 200){
                 tableData.value = result.data.map((ele) => {
                     if(ele.englishName == '数据汇总'){
-                        if(type.value == 1){
-                            ele.englishName = lan.value[ele.englishName];
-                        }else{
-                            ele.englishName = lan.value[ele.englishName];
-                        }
+                        ele.englishName = lan.value[ele.englishName];
                     }else{
                         if(type.value == 1){
                             ele.englishName = ele.year+''+(ele.month <= 9 ? '0'+ele.month : ele.month);
@@ -108,14 +106,27 @@ export default {
                             ele.englishName = getLocalTime(ele.sTime, '-', 1) + '~' + getLocalTime(ele.eTime, '-', 1);
                         }
                     }
+                    if(userRole.value >= 1 && userRole.value <= 3){
+                        ele.orgName = orgNameN.value ? lan.value[orgNameN.value] : lan.value['全部机构'];
+                    }else{
+                        ele.orgName = lan.value[orgName.value];
+                    }
                     
-                    ele.orgName = orgName.value ? orgName.value : lan.value['全部机构'];
                     ele.finishPercentO = ele.finishPercent ? (ele.finishPercent*100).toFixed(2)+'%' : '0%';
+
+                    ele.gcNumberT = thousands(ele.gcNumber);
+                    ele.volumeNumberT = thousands(ele.volumeNumber);
+                    ele.gcNumberOverT = thousands(ele.gcNumberOver);
+                    ele.volumeNumberOverT = thousands(ele.volumeNumberOver);
+                    ele.gcNumberOverIndexT = thousands(ele.gcNumberOverIndex);
+                    ele.volumeNumberOverIndexT = thousands(ele.volumeNumberOverIndex);
+                    ele.gcNumberOverNoIndexT = thousands(ele.gcNumberOverNoIndex);
+                    ele.volumeNumberOverNoIndexT = thousands(ele.volumeNumberOverNoIndex);
                     
                     return ele;
                 });
 
-                let chartDataO = {'labels': [], 'data': [], 'label': ['谱目数(有影像)', '编目完结', '可索引', '不可索引']};
+                let chartDataO = {'labels': [], 'data': [], 'label': [lan.value['谱目数(有影像)'], lan.value['编目完结'], lan.value['可索引'], lan.value['不可索引']]};
                 let gcNumber = [], gcNumberOver = [], gcNumberOverIndex = [], gcNumberOverNoIndex = [];
 
                 tableData.value.forEach((ele) => {
@@ -144,7 +155,7 @@ export default {
         // 机构列表
         const orgList = ref([]);
         const orgKeyN = ref('');
-        const orgName = ref('');
+        const orgNameN = ref('');
         const getOrgList = async () => {
             const result = await org.getOrgList(siteKey.value, '');
             if(result.status == 200){
@@ -160,7 +171,7 @@ export default {
         watch(orgKeyN, (nv, ov) => {
             orgList.value.forEach((ele) => {
                 if(ele.value == nv){
-                    orgName.value = nv ? ele.label : '';
+                    orgNameN.value = nv ? ele.label : '';
                 }
             });
         });
@@ -173,7 +184,9 @@ export default {
         });
 
         // 切换页面
-        const routeList = ref([{'label': '按编目汇总', 'value': '/catalogReport'}, {'label': '按机构汇总', 'value': '/catalogMonthReport'}]);
+        const routeList = ref([
+            {'label': '按编目汇总', 'value': '/catalogReport'}
+        ]);
         const routeType = ref('/catalogReport');
         watch(routeType, (nv, ov) => {
             router.push(nv);
@@ -185,8 +198,19 @@ export default {
         onMounted(() => {
             startTime.value = getCurrentMonthZero();
             endTime.value = getCurrentMonthZero(0);
+            subtitle.value = getLocalTime(startTime.value, '/', 2) + '-' + getLocalTime((endTime.value), '/', 2);
 
             tableH.value = window.innerHeight - 100;
+
+            if(userRole.value >= 1 && userRole.value <= 3){
+                routeList.value = [
+                    {'label': '按编目汇总', 'value': '/catalogReport'}, 
+                    {'label': '按机构汇总', 'value': '/catalogMonthReport'},
+                    {'label': '机构编目准确率统计表', 'value': '/catalogEditReport'},
+                ];
+            }else{
+                orgKeyN.value = orgKey.value;
+            }
 
             getOrgList();
             getDataList();
@@ -220,10 +244,19 @@ export default {
             window.open('/imageStatistics?orgKey='+orgKey+'&startTime='+startTimes+'&endTime='+endTimes+'&uploadStartTime='+uploadStartTimes+'&uploadEndTime='+uploadEndTimes+'&isAll=1');
         }
 
+        const title = ref(lan.value['编目月度汇总']);
+        const subtitle = ref('');
+        watch(startTime, (nv, ov) => {
+            subtitle.value = getLocalTime(startTime.value, '/', 2) + '-' + getLocalTime((endTime.value), '/', 2);
+        });
+        watch(endTime, (nv, ov) => {
+            subtitle.value = getLocalTime(startTime.value, '/', 2) + '-' + getLocalTime((endTime.value), '/', 2);
+        });
+
         return {
             tableData, getDataList, isChart, userRole, startTime, endTime,
 			chartData, lan, sidebarW, routeList, routeType, type, typeList, handleCellClick, 
-            orgList, orgKeyN, tableH,
+            orgList, orgKeyN, tableH, title, subtitle, orgNameN,
         }
     }
 }

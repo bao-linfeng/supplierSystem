@@ -26,7 +26,7 @@ const getLocalTime = (nS, symbol, index) => {
         var date = new Date(Number(nS)),
             Y, M, D, h, m, s;
         Y = date.getFullYear() + symbol;
-        M = (date.getMonth() + 1 < 10 ? '0' + (date.getMonth() + 1) : date.getMonth() + 1) + symbol;
+        M = (date.getMonth() + 1 < 10 ? '0' + (date.getMonth() + 1) : date.getMonth() + 1) + (index >= 2 && index <= 3 ? '' : symbol);
         D = date.getDate() < 10 ? '0'+ date.getDate() : date.getDate()+'';
         h = appendzero(date.getHours()) + ':';
         m = appendzero(date.getMinutes()) + ':';
@@ -201,7 +201,7 @@ function getSurplusDays(timestamp){
 
 // 获取当前月零点时间戳
 function getCurrentMonthZero(t = 11){
-    let time = new Date().setMonth(new Date().getMonth() - t); // || new Date(Date.now() - 1000*60*60*24*30*t)
+    let time = new Date().setMonth(t >= 0 ? new Date().getMonth() - t : new Date().getMonth() + Math.abs(t)); // || new Date(Date.now() - 1000*60*60*24*30*t)
         time = new Date(time);
         time.setDate(1);
         time.setHours(0);
@@ -287,6 +287,15 @@ function downliadLink(fileName){
     document.body.removeChild(a);
 }
 
+/** 
+ * 数字千分位逗号分割 
+ * @param {Number} [num=0] - 数字
+ * @returns {String} 千分位逗号分割的字符串，如 12,345
+ */
+function thousands(num){
+    return (num || 0).toLocaleString();
+}
+
 // 命名导出 可以导出多个
 export {
     timeago,
@@ -307,4 +316,6 @@ export {
     downliadLink, 
     getNowTimestamp, 
     getLastYearTodayTimestamp,
+    thousands,
+    getTodayZero,
 }

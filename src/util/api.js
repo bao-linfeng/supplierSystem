@@ -218,7 +218,7 @@ const supplierMS = {
         }
         return request.get('/supplierMS/gcVerifyDetailTotal', param);
     },
-    getImageVerifyDetail(orgKey, siteKey, genealogyName, catalogKey, condition, startTime, endTime, uploadStartTime, uploadEndTime, status, page, limit){// 影像审核明细
+    getImageVerifyDetail(orgKey, siteKey, genealogyName, catalogKey, condition, startTime, endTime, uploadStartTime, uploadEndTime, firstSubmitStartTime, firstSubmitEndTime, status, page, limit){// 影像审核明细
         let param = {
             orgKey: orgKey,
             siteKey: siteKey,
@@ -229,6 +229,8 @@ const supplierMS = {
             endTime: endTime,
             uploadStartTime: uploadStartTime,
             uploadEndTime: uploadEndTime,
+            firstSubmitStartTime: firstSubmitStartTime,
+            firstSubmitEndTime: firstSubmitEndTime,
             status: status, 
             page: page,
             limit: limit
@@ -238,7 +240,7 @@ const supplierMS = {
     getimageVerifyDetailDownload(param){// 影像审核明细 - 下载
         return request.get('/supplierMS/imageVerifyDetailDownload', param);
     },
-    imageVerifyDetailTotal(orgKey, siteKey, genealogyName, catalogKey, condition, startTime, endTime, uploadStartTime, uploadEndTime, status, page, limit){// 影像审核明细总计
+    imageVerifyDetailTotal(orgKey, siteKey, genealogyName, catalogKey, condition, startTime, endTime, uploadStartTime, uploadEndTime, firstSubmitStartTime, firstSubmitEndTime, status, page, limit){// 影像审核明细总计
         let param = {
             orgKey: orgKey,
             siteKey: siteKey,
@@ -249,6 +251,8 @@ const supplierMS = {
             endTime: endTime,
             uploadStartTime: uploadStartTime,
             uploadEndTime: uploadEndTime,
+            firstSubmitStartTime: firstSubmitStartTime,
+            firstSubmitEndTime: firstSubmitEndTime,
             status: status, 
             page: page,
             limit: limit
@@ -326,11 +330,12 @@ const supplierMS = {
         return request.get('/supplierMS/price', param);
     },
     // 机构年度任务
-    addOrgTask(year, orgKey, taskNumber){// 增加机构年度任务
+    addOrgTask(year, orgKey, taskNumber, annualBudget){// 增加机构年度任务
         let param = {
             year: year,
             orgKey: orgKey,
-            taskNumber: taskNumber
+            taskNumber: taskNumber,
+            annualBudget: annualBudget,
         }
         return request.post('/supplierMS/orgTask', param);
     },
@@ -421,6 +426,9 @@ const supplierMS = {
         // }
         return request.post('/lhpmfoxx/bill/drawBill', param);
     },
+    toBeSettledResidueTotal(param){// 待结算剩余统计
+        return request.post('/supplierMS/toBeSettledResidueTotal', param);
+    },
     // 发票详情
     getBillDetail(dataKey){
         let param = {
@@ -500,8 +508,10 @@ const supplierMS = {
         }
         return request.get('/supplierMS/monthlySummaryOrg', param);
     },
-    imageMonthSummaryOrg(uploadStartTime, uploadEndTime, startTime, endTime, typeStatus){// 影像月度汇总（各机构统计）
+    imageMonthSummaryOrg(firstSubmitStartTime, firstSubmitEndTime, uploadStartTime, uploadEndTime, startTime, endTime, typeStatus){// 影像月度汇总（各机构统计）
         let param = {
+            firstSubmitStartTime: firstSubmitStartTime,
+            firstSubmitEndTime: firstSubmitEndTime,
             uploadStartTime: uploadStartTime,
             uploadEndTime: uploadEndTime,
             startTime: startTime,
@@ -626,6 +636,39 @@ const supplierMS = {
     },
     GCOverStatisticsAllOrg(param){// 編目檢核月度汇总（各机构统计）
         return request.get('/supplierMS/GCOverStatisticsAllOrg', param);
+    },
+    GCOverWorkStatistics(param){// 編目完结（月/週/日）工作量统计
+        return request.get('/supplierMS/GCOverWorkStatistics', param);
+    },
+    GCOverStatisticsAllOrgSingleData(param){// 編目完结（月/週/日）（各机构统计）单数据
+        return request.get('/supplierMS/GCOverStatisticsAllOrgSingleData', param);
+    },
+    getLogType(param){// 日志类型
+        return request.get('/supplierMS/logType', param);
+    },
+    getDeductionAmount(param){// 获取扣款金额
+        return request.post('/supplierMS/getDeductionAmount', param);
+    },
+    deductionBill(param){// 发票扣款
+        return request.post('/supplierMS/deductionBill', param);
+    },
+    errorCausesAnalysis(param){// 影像准确率 日/周/月
+        return request.post('/supplierMS/errorCausesAnalysis', param);
+    },
+    GCOverAnalysisArray(param){// 编目分析（月/週/日）度匯總（数组）
+        return request.post('/supplierMS/GCOverAnalysisArray', param);
+    },
+    supplierMonthSubmitCount(param){// 供应商月提交量（影像页数/adj影像页数）type 1 影像页数 2 adj影像页数
+        return request.post('/supplierMS/supplierMonthSubmitCount', param);
+    },
+    supplierMonthContribution(param){// 供应商月贡献度（影像页数/adj影像页数）type 1 影像页数 2 adj影像页数
+        return request.post('/supplierMS/supplierMonthContribution', param);
+    },
+    supplierMonthCheck(param){// 供应商月谱书即时审核状态
+        return request.post('/supplierMS/supplierMonthCheck', param);
+    },
+    supplierImageAmount(param){// 供应商拍数金额统计
+        return request.post('/supplierMS/supplierImageAmount', param);
     },
 }
 

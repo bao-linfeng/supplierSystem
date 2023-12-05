@@ -37,7 +37,7 @@
 import { ref, reactive, onMounted, watch, watchEffect, computed, provide,readonly, toRefs } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useState, changePropertyValue } from '../store';
-import { getQueryVariable, getLocalTime, downliadLink, getNowTimestamp, getLastYearTodayTimestamp, getDays } from '../util/ADS';
+import { getQueryVariable, getLocalTime, downliadLink, getNowTimestamp, getLastYearTodayTimestamp, getDays, thousands } from '../util/ADS';
 import { supplierMS, org } from '../util/api';
 import PaginationModule from '../components/PaginationModule.vue';
 
@@ -61,7 +61,7 @@ export default {
         const limit = ref(30000);
 
         const theadV = ref(['机构名称', '发票编号', '发票提交时间', '发票通过时间', '影像上传时间', '审核通过时间', '谱名', '谱ID', '卷名', '卷ID', '影像数', '当前拍数','金额小计', '卷状态', '发票状态']);
-        const parameterV = ref(['name', 'billNo', 'createTimeO', 'billPassTimeO', 'submitTimeO', 'passTimeO', 'genealogyName', 'gcKey', 'volumeNumber', 'volumeKey', 'imgNumber', 'currImgNumber','amountO', 'takeStatusO', 'billStatusO']);
+        const parameterV = ref(['name', 'billNo', 'createTimeO', 'billPassTimeO', 'submitTimeO', 'passTimeO', 'genealogyName', 'gcKey', 'volumeNumberT', 'volumeKey', 'imgNumberT', 'currImgNumberT','amountO', 'takeStatusO', 'billStatusO']);
 
         const billCreateTime = ref('');
 		const billCreateStartTime = ref('');
@@ -116,7 +116,7 @@ export default {
                     amount = ele.amount + amount;
                     ele.red = ele.currImgNumber == ele.imgNumber ? false : true;
                     ele.name = lanType.value == 'en' ? ele.englishName : ele.orgName;
-                    ele.amountO = '$'+ele.amount;
+                    ele.amountO = '$'+thousands(ele.amount);
                     ele.billStatusO = lan.value[billStatusO.value[ele.billStatus]];
                     ele.createTimeO = getLocalTime(ele.createTime, '/', 1);
                     ele.billPassTimeO = getLocalTime(ele.billPassTime, '/', 1);
@@ -124,6 +124,10 @@ export default {
                     ele.submitTimeO = ele.submitTime ? getLocalTime(ele.submitTime, '/', 1) : '';
                     ele.singleOrTwo = ele.singleOrTwo == '2' ? lan.value['双拍'] : ele.singleOrTwo == '1' ? lan.value['单拍'] : '';
                     ele.takeStatusO = ele.takeStatus >= 7 && ele.takeStatus <= 9 ? lan.value['通过'] : ele.takeStatus == 12 ? lan.value['机构审核'] : ele.takeStatus == 5 ? lan.value['微站初审'] : ele.takeStatus == 13 ? lan.value['微站复审'] : ele.takeStatus == 14 ? lan.value['微站待议'] : ele.takeStatus == 6 ? lan.value['打回'] : ele.takeStatus == 16 ? lan.value['作废'] : '';
+                    
+                    ele.volumeNumberT = thousands(ele.volumeNumber);
+                    ele.imgNumberT = thousands(ele.imgNumber);
+                    ele.currImgNumberT = thousands(ele.currImgNumber);
                     return ele;
                 });
                 // tbody.value.push({'name': lan.value['本页小计'], 'imgNumber': imgNumber, 'amountO': '$'+amount.toFixed(2)});
@@ -176,7 +180,16 @@ export default {
                 });
             if(result.status == 200){
                 let data = result.data;
-                tbody.value.push({'name': lan.value['汇总统计'], 'all': true, 'billNo': data.billStatisticsTotalBill, 'genealogyName': data.billStatisticsTotalGC, 'volumeNumber': total.value, 'imgNumber': data.billStatisticsTotalImg, 'currImgNumber': data.billStatisticsTotalCurrImg, 'amountO': '$'+data.billStatisticsTotalAmount});
+                tbody.value.push({
+                    'name': lan.value['汇总统计'], 
+                    'all': true, 
+                    'billNo': data.billStatisticsTotalBill, 
+                    'genealogyName': data.billStatisticsTotalGC, 
+                    'volumeNumberT': thousands(total.value), 
+                    'imgNumberT': thousands(data.billStatisticsTotalImg), 
+                    'currImgNumberT': thousands(data.billStatisticsTotalCurrImg), 
+                    'amountO': '$'+thousands(data.billStatisticsTotalAmount)
+                });
             }
         }
 

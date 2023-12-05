@@ -56,6 +56,7 @@
                                 <th>{{lan['年度']}}</th>
                                 <th>{{lan['机构名称']}}</th>
                                 <th>{{lan['总拍数']}}</th>
+                                <th>{{lan['年度预算']}}</th>
                                 <th v-if="userRole >= 1 && userRole <= 2">{{lan['操作']}}</th>
                             </tr>
                         </thead>
@@ -63,7 +64,8 @@
                             <tr v-for="(item, index) in yearTaskList" :key="index">
                                 <td>{{item.year}}</td>
                                 <td>{{item.name}}</td>
-                                <td>{{item.taskNumber}}</td>
+                                <td>{{item.taskNumberT}}</td>
+                                <td>{{item.annualBudgetT}}</td>
                                 <td v-if="userRole >= 1 && userRole <= 2">
                                     <button class="btn marginR10" @click="editData(item, 2)">{{lan['编辑']}}</button>
                                     <button class="btn" @click="deleteData(item._key, 2)">{{lan['删除']}}</button>
@@ -86,7 +88,7 @@
 import { ref, reactive, onMounted, watch, watchEffect, computed, provide,readonly, toRefs } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useState, changePropertyValue } from '../store';
-import { getQueryVariable, getLocalTime } from '../util/ADS';
+import { getQueryVariable, getLocalTime, thousands } from '../util/ADS';
 import { supplierMS, org } from '../util/api';
 import EditTakeCameraPrice from '../components/EditTakeCameraPrice.vue';
 import EditYearTask from '../components/EditYearTask.vue';
@@ -129,6 +131,8 @@ export default {
                 yearTaskList.value = result.data.map((ele) => {
                     ele.name = lanType.value == 'en' ? ele.englishName : ele.orgName;
                     ele.organizationNo = ele.organizationNo ? ele.organizationNo +'('+ele.orgName+')' : '';
+                    ele.taskNumberT = thousands(ele.taskNumber);
+                    ele.annualBudgetT = thousands(ele.annualBudget);
                     return ele;
                 });
             }else{

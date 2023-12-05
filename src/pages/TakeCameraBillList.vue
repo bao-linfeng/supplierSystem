@@ -60,7 +60,7 @@
 import { ref, reactive, onMounted, watch, watchEffect, computed, provide,readonly, toRefs } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useState, changePropertyValue } from '../store';
-import { getQueryVariable, getLocalTime, createMsg } from '../util/ADS';
+import { getQueryVariable, getLocalTime, createMsg, thousands } from '../util/ADS';
 import { supplierMS, org } from '../util/api';
 import PaginationModule from '../components/PaginationModule.vue';
 import BillMemo from '../components/bill/BillMemo.vue';
@@ -77,8 +77,8 @@ export default {
         const router = useRouter();
         const id = props.id;
 
-        const theadV = ref(['机构名称', '发票编号', '提交时间', '提交谱数', '卷数', '影像页数', '金额小计', '发票状态', '流程节点', '操作']);
-        const parameterV = ref(['orgName', 'billNo', 'createTime', 'gcNumber', 'volumeNumber', 'totalImgNumber', 'totalAmountO', 'statusO', 'approvalStatusO' , 'action']);
+        const theadV = ref(['机构名称', '发票编号', '提交时间', '提交谱数', '卷数', '影像页数', '金额小计', '实付金额','发票状态', '流程节点', '操作']);
+        const parameterV = ref(['orgName', 'billNo', 'createTime', 'gcNumberT', 'volumeNumberT', 'totalImgNumberT', 'totalAmountO', 'paidInAmountO', 'statusO', 'approvalStatusO' , 'action']);
 
         const page = ref(1);
         const pages = ref(0);
@@ -106,11 +106,16 @@ export default {
                     volumeNumber = ele.volumeNumber + volumeNumber;
                     imgNumberO.value = imgNumberO.value + ele.totalImgNumber;
                     amountO.value = amountO.value + ele.totalAmount;
+                    ele.paidInAmountO = '$'+thousands(ele.totalAmount + (ele.deductionAmount || 0));
                     ele.organizationNo = ele.organizationNo ? ele.organizationNo +'('+ele.orgName+')' : '';
                     ele.createTime = ele.createTime ? getLocalTime(ele.createTime, '-', 1) : '';
-                    ele.totalAmountO = ele.totalAmount ? '$'+ele.totalAmount : '';
+                    ele.totalAmountO = ele.totalAmount ? '$'+thousands(ele.totalAmount) : '';
                     ele.statusO = lan.value[statusO[ele.status]];
                     ele.approvalStatusO = ele.status >= 2 ? '' : ele.processError == 1 ? '' : lan.value['待']+ele.auUserName+lan.value['审批'];
+
+                    ele.gcNumberT = thousands(ele.gcNumber);
+                    ele.volumeNumberT = thousands(ele.volumeNumber);
+                    ele.totalImgNumberT = thousands(ele.totalImgNumber);
                     return ele;
                 });
                 tbody.value.push({'orgName': '本页小计', 'billNo': billNo, 'gcNumber': gcNumber, 'volumeNumber': volumeNumber,'totalImgNumber': (imgNumberO.value || 0), 'totalAmountO': '$'+(amountO.value).toFixed(2)});
@@ -125,7 +130,15 @@ export default {
             const result = await supplierMS.billTotal(orgKeyN.value, siteKey.value, startTime.value, endTime.value, approvalStatus.value, status.value.join(','));
             if(result.status == 200){
                 let data = result.data;
-                tbody.value.push({'orgName': '汇总统计', 'all': true, 'billNo': data.billNumber, 'gcNumber': data.GCNumber, 'volumeNumber': data.volumeNumber, 'totalImgNumber': data.pagesTotal, 'totalAmountO' : '$'+data.amountTotal});
+                tbody.value.push({
+                    'orgName': '汇总统计', 
+                    'all': true, 
+                    'billNo': data.billNumber, 
+                    'gcNumberT': thousands(data.GCNumber), 
+                    'volumeNumberT': thousands(data.volumeNumber), 
+                    'totalImgNumberT': thousands(data.pagesTotal), 
+                    'totalAmountO' : '$'+thousands(data.amountTotal)
+                });
             }
         }
 
@@ -268,8 +281,8 @@ export default {
 
             }else{
                 orgKeyN.value = orgKey.value;
-                theadV.value = ['机构名称', '发票编号', '提交时间', '提交谱数', '卷数', '影像页数', '金额小计', '发票状态', '操作'];
-                parameterV.value = ['orgName', 'billNo', 'createTime', 'gcNumber', 'volumeNumber', 'totalImgNumber', 'totalAmountO', 'statusO', 'action'];
+                theadV.value = ['机构名称', '发票编号', '提交时间', '提交谱数', '卷数', '影像页数', '金额小计', '实付金额', '发票状态', '操作'];
+                parameterV.value = ['orgName', 'billNo', 'createTime', 'gcNumberT', 'volumeNumberT', 'totalImgNumberT', 'totalAmountO', 'paidInAmountO', 'statusO', 'action'];
             }
             
             getApprovalUser();

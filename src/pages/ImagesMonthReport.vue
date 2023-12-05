@@ -17,31 +17,44 @@
                     <span>{{lan['图表展示']}}</span>
                     <img src="../assets/chart.svg" alt="">
                 </div>
-                <label for="">{{lan['上传时间']}}</label>
+                <label for="">{{lan['初次上传时间']}}</label>
+                <el-date-picker
+                    class="w130"
+                    v-model="firstSubmitStartTime"
+                    type="month"
+                    :placeholder="lan['开始时间']">
+                </el-date-picker>
+                <el-date-picker
+                    class="w130"
+                    v-model="firstSubmitEndTime"
+                    type="month"
+                    :placeholder="lan['结束时间']">
+                </el-date-picker>
+                <label for="">{{lan['最新上传时间']}}</label>
                 <el-date-picker
                     class="w130"
                     v-model="uploadStartTime"
                     type="month"
-                    :placeholder="lan['上传开始时间']">
+                    :placeholder="lan['开始时间']">
                 </el-date-picker>
                 <el-date-picker
                     class="w130"
                     v-model="uploadEndTime"
                     type="month"
-                    :placeholder="lan['上传结束时间']">
+                    :placeholder="lan['结束时间']">
                 </el-date-picker>
                 <label for="">{{lan['通过时间']}}</label>
                 <el-date-picker
                     class="w130"
                     v-model="startTime"
                     type="month"
-                    :placeholder="lan['通过开始时间']">
+                    :placeholder="lan['开始时间']">
                 </el-date-picker>
                 <el-date-picker
                     class="w130"
                     v-model="endTime"
                     type="month"
-                    :placeholder="lan['通过结束时间']">
+                    :placeholder="lan['结束时间']">
                 </el-date-picker>
                 
                 <el-button type="primary" @click="getDataList">{{lan['检索']}}</el-button>
@@ -68,7 +81,8 @@
                 </tbody>
             </table>
         </div>
-        <ChartModule v-if="isChart" :year="Date.now()" :orgName="''" :chartData="chartData" v-on:close="isChart = false" />
+        <!-- <ChartModule v-if="isChart" :year="Date.now()" :orgName="''" :chartData="chartData" v-on:close="isChart = false" /> -->
+        <EchartsModule v-if="isChart" :title="title" :subtitle="subtitle+' '+orgName" :chartData="chartData" v-on:close="isChart = false" />
     </div>
 </template>
 
@@ -76,13 +90,14 @@
 import { ref, reactive, onMounted, watch, watchEffect, computed, provide,readonly, toRefs } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useState, changePropertyValue } from '../store';
-import { getQueryVariable, getLocalTime, createMsg, getCurrentMonthZero, getDays, getMonthTimestamp } from '../util/ADS';
+import { getQueryVariable, getLocalTime, createMsg, getCurrentMonthZero, getDays, getMonthTimestamp, thousands } from '../util/ADS';
 import { supplierMS, org } from '../util/api';
 import ChartModule from '../components/ChartModule.vue';
+import EchartsModule from '../components/EchartsModule.vue';
 
 export default {
     components: {
-        ChartModule, 
+        ChartModule, EchartsModule, 
     },
     name: 'imagesMonthReport',
     props: ['id'],
@@ -92,21 +107,23 @@ export default {
         const id = props.id;
 
         const theadV = ref(['年度月份', '数据汇总', '寻源堂', '成蹊', '馨里有谱', '仰沁', '良友科苑', '时光科技', '古中山']);
-        const parameterV = ref(['englishName', 'allOrgNumber', 'aa', 'bb', 'bbc', 'cc', 'dd', 'ee', 'ff']);
+        const parameterV = ref(['englishName', 'allOrgNumberT', 'aaT', 'bbT', 'bbcT', 'ccT', 'ddT', 'eeT', 'ffT']);
 
-		const startTime = ref(Date.now() - 1000*60*60*24*30*11);
-		const endTime = ref(Date.now());
-        const uploadStartTime = ref(Date.now() - 1000*60*60*24*30*11);
-		const uploadEndTime = ref(Date.now());
+		const startTime = ref('');
+		const endTime = ref('');
+        const uploadStartTime = ref('');
+		const uploadEndTime = ref('');
+        const firstSubmitStartTime = ref('');
+        const firstSubmitEndTime = ref('');
         const tbody = ref([]);
         const chartData = ref({'labels': [], 'data': [], 'label': []});
         const getDataList = async () => {
-            if(!startTime.value && !endTime.value && !uploadStartTime.value && !uploadEndTime.value){
-                return createMsg('请选择时间，上传时间和通过时间必选一个！');
-            }
+            // if(!startTime.value && !endTime.value && !uploadStartTime.value && !uploadEndTime.value){
+            //     return createMsg('请选择时间，上传时间和通过时间必选一个！');
+            // }
             tbody.value = [];
 			changePropertyValue('isLoading', true);
-            const result = await supplierMS.imageMonthSummaryOrg(uploadStartTime.value ? new Date(uploadStartTime.value).getTime() : '', uploadEndTime.value ? new Date(uploadEndTime.value).getTime()+getDays(new Date(uploadEndTime.value).getTime())-1 : '', startTime.value ? new Date(startTime.value).getTime() : '', endTime.value ? new Date(endTime.value).getTime()+getDays(new Date(endTime.value).getTime())-1 : '', isFileTime.value ? 2: 1);
+            const result = await supplierMS.imageMonthSummaryOrg(firstSubmitStartTime.value ? new Date(firstSubmitStartTime.value).getTime() : '', firstSubmitEndTime.value ? new Date(firstSubmitEndTime.value).getTime()+getDays(new Date(firstSubmitEndTime.value).getTime())-1 : '', uploadStartTime.value ? new Date(uploadStartTime.value).getTime() : '', uploadEndTime.value ? new Date(uploadEndTime.value).getTime()+getDays(new Date(uploadEndTime.value).getTime())-1 : '', startTime.value ? new Date(startTime.value).getTime() : '', endTime.value ? new Date(endTime.value).getTime()+getDays(new Date(endTime.value).getTime())-1 : '', isFileTime.value ? 2: 1);
             changePropertyValue('isLoading', false);
 			if(result.status == 200){
                 tbody.value = result.data.map((ele) => {
@@ -118,6 +135,16 @@ export default {
                     
 
                     ele.organizationNo = ele.organizationNo ? ele.organizationNo +'('+ele.orgName+')' : '';
+
+                    ele.allOrgNumberT = thousands(ele.allOrgNumber);
+                    ele.aaT = thousands(ele.aa);
+                    ele.bbT = thousands(ele.bb);
+                    ele.bbcT = thousands(ele.bbc);
+                    ele.ccT = thousands(ele.cc);
+                    ele.ddT = thousands(ele.dd);
+                    ele.eeT = thousands(ele.ee);
+                    ele.ffT = thousands(ele.ff);
+                    
                     return ele;
                 });
 
@@ -154,7 +181,14 @@ export default {
             }
         }
 
-        const routeList = ref([{'label': '按影像汇总', 'value': '/imageGather'}, {'label': '按机构汇总', 'value': '/imagesMonthReport'}]);
+        const routeList = ref([
+            {'label': '按影像汇总', 'value': '/imageGather'}, 
+            {'label': '按机构汇总', 'value': '/imagesMonthReport'}, 
+            {'label': '影像准确率', 'value': '/imageRemarkReport'},
+            {'label': '月提交量统计', 'value': '/SupplierMonthSubmit'},
+            {'label': '供应商贡献度', 'value': '/SupplierContribution'},
+            {'label': '审核状态统计', 'value': '/MonthVolumeSubmit'},
+        ]);
         const routeType = ref('/imagesMonthReport');
         watch(routeType, (nv, ov) => {
             router.push(nv);
@@ -167,7 +201,7 @@ export default {
             const result = await org.getOrgList(siteKey.value, '');
             if(result.status == 200){
                 result.data.map((ele) => {
-                    orgKeyO[ele.organizationNo] = ele._key
+                    orgKeyO[ele.organizationNo+'T'] = ele._key
                 });
             }
         }
@@ -177,10 +211,13 @@ export default {
         });
 
         onMounted(() => {
-            uploadStartTime.value = getCurrentMonthZero();
-            uploadEndTime.value = getCurrentMonthZero(0);
+            // firstSubmitStartTime.value = getCurrentMonthZero();
+            // firstSubmitEndTime.value = getCurrentMonthZero(0);
+            // uploadStartTime.value = getCurrentMonthZero();
+            // uploadEndTime.value = getCurrentMonthZero(0);
             startTime.value = getCurrentMonthZero();
             endTime.value = getCurrentMonthZero(0);
+            subtitle.value = getLocalTime(startTime.value, '/', 2) + '-' + getLocalTime((endTime.value), '/', 2);
 
             getOrgList();
             getDataList();
@@ -194,13 +231,13 @@ export default {
         // 单元格点击 
         const handleCellClick = (row, column) => {
             console.log(row, column);
-            let orgKey = '', startTimes = '', endTimes = '', uploadStartTimes = '', uploadEndTimes = '';
+            let orgKey = '', startTimes = '', endTimes = '', uploadStartTimes = '', uploadEndTimes = '', firstSubmitStartTimes = '', firstSubmitEndTimes = '';
 
             if(row == 'englishName'){
                 return;
             }
             if(row != 'allOrgNumber'){
-                orgKey = orgKeyO[row];
+                orgKey = orgKeyO[row] || '';
             }
 
             if(column.englishName != '数据汇总'){
@@ -210,12 +247,26 @@ export default {
 
                     uploadStartTimes = uploadStartTime.value ? new Date(uploadStartTime.value).getTime() : '';
                     uploadEndTimes = uploadEndTime.value ? new Date(uploadEndTime.value).getTime()+getDays(new Date(uploadEndTime.value).getTime())-1 : '';
+
+                    firstSubmitStartTimes = firstSubmitStartTime.value ? new Date(firstSubmitStartTime.value).getTime() : '';
+                    firstSubmitEndTimes = firstSubmitEndTime.value ? new Date(firstSubmitEndTime.value).getTime()+getDays(new Date(firstSubmitEndTime.value).getTime())-1 : '';
                 }else{
                     startTimes = '';
                     endTimes = '';
 
-                    uploadStartTimes = getMonthTimestamp(column.year, column.month).firstDayTimestamp;
-                    uploadEndTimes = getMonthTimestamp(column.year, column.month).lastDayTimestamp;
+                    if(uploadStartTime.value && uploadEndTime.value){
+                        uploadStartTimes = getMonthTimestamp(column.year, column.month).firstDayTimestamp;
+                        uploadEndTimes = getMonthTimestamp(column.year, column.month).lastDayTimestamp;
+
+                        firstSubmitStartTimes = firstSubmitStartTime.value ? new Date(firstSubmitStartTime.value).getTime() : '';
+                        firstSubmitEndTimes = firstSubmitEndTime.value ? new Date(firstSubmitEndTime.value).getTime()+getDays(new Date(firstSubmitEndTime.value).getTime())-1 : '';
+                    }else{
+                        uploadStartTimes = uploadStartTime.value ? new Date(uploadStartTime.value).getTime() : '';
+                        uploadEndTimes = uploadEndTime.value ? new Date(uploadEndTime.value).getTime()+getDays(new Date(uploadEndTime.value).getTime())-1 : '';
+
+                        firstSubmitStartTimes = getMonthTimestamp(column.year, column.month).firstDayTimestamp;
+                        firstSubmitEndTimes = getMonthTimestamp(column.year, column.month).lastDayTimestamp;
+                    }
                 }
             }else{
                 startTimes = startTime.value ? new Date(startTime.value).getTime() : '';
@@ -223,15 +274,22 @@ export default {
 
                 uploadStartTimes = uploadStartTime.value ? new Date(uploadStartTime.value).getTime() : '';
                 uploadEndTimes = uploadEndTime.value ? new Date(uploadEndTime.value).getTime()+getDays(new Date(uploadEndTime.value).getTime())-1 : '';
+
+                firstSubmitStartTimes = firstSubmitStartTime.value ? new Date(firstSubmitStartTime.value).getTime() : '';
+                firstSubmitEndTimes = firstSubmitEndTime.value ? new Date(firstSubmitEndTime.value).getTime()+getDays(new Date(firstSubmitEndTime.value).getTime())-1 : '';
             }
 
-            window.open('/imageStatistics?orgKey='+orgKey+'&startTime='+startTimes+'&endTime='+endTimes+'&uploadStartTime='+uploadStartTimes+'&uploadEndTime='+uploadEndTimes+'&isAll=1');
+            window.open('/imageStatistics?orgKey='+orgKey+'&startTime='+startTimes+'&endTime='+endTimes+'&uploadStartTime='+uploadStartTimes+'&uploadEndTime='+uploadEndTimes+'&firstSubmitStartTime='+firstSubmitStartTimes+'&firstSubmitEndTime='+firstSubmitEndTimes+'&isAll=1');
         }
 
         // 下载
         const initDownloadExcel = () => {
-            let aoa = [];
-            aoa.push(theadV.value);
+            let aoa = [], t = [];
+            theadV.value.forEach((ele) => {
+                t.push(lan.value[ele]);
+            });
+            aoa.push(t);
+            
             tbody.value.forEach((ele) => {
                 aoa.push([ele.englishName, ele.allOrgNumber, ele.aa, ele.bb, ele.bbc, ele.cc, ele.dd, ele.ee, ele.ff]);
             });
@@ -291,14 +349,64 @@ export default {
             (function aoa_to_sheet(aoa){
                 let XLSX = window.XLSX;
                 var sheet = XLSX.utils.aoa_to_sheet(aoa);
-                openDownloadDialog(sheet2blob(sheet), '影像月度汇总.xlsx');
+                openDownloadDialog(sheet2blob(sheet), lan.value['影像月度汇总']+'.xlsx');
             })(aoa)
+        }
+
+        const orgName = ref('');
+        const title = ref(lan.value['影像月度汇总']);
+        const subtitle = ref('');
+        watch(startTime, (nv, ov) => {
+            subtitle.value = getLocalTime(startTime.value, '/', 2) + '-' + getLocalTime((endTime.value), '/', 2);
+        });
+        watch(endTime, (nv, ov) => {
+            subtitle.value = getLocalTime(startTime.value, '/', 2) + '-' + getLocalTime((endTime.value), '/', 2);
+        });
+
+        const getBlobByFetch = () => {
+            fetch('https://indexserver.1jiapu.com/index/CN3054551/3014697271/3014697271.tar.gz')
+            .then((r) => {
+                return r.blob();
+            })
+            .then((blob) => {
+                function showFile(blob){
+                    // It is necessary to create a new blob object with mime-type explicitly set
+                    // otherwise only Chrome works like it should
+                    let newBlob = new Blob([blob], {type: blob.type})
+
+                    // IE doesn't allow using a blob object directly as link href
+                    // instead it is necessary to use msSaveOrOpenBlob
+                    if (window.navigator && window.navigator.msSaveOrOpenBlob) {
+                        window.navigator.msSaveOrOpenBlob(newBlob);
+                        return;
+                    }
+
+                    // For other browsers:
+                    // Create a link pointing to the ObjectURL containing the blob.
+                    let data = window.URL.createObjectURL(newBlob);
+                    let link = document.createElement('a');
+                    link.href = data;
+                    link.download = "3014697271.tar.gz";
+                    link.click();
+                    let t = setTimeout(function(){
+                        // For Firefox it is necessary to delay revoking the ObjectURL
+                        window.URL.revokeObjectURL(data);
+                        clearTimeout(t);
+                        t = null;
+                        newBlob = null;
+                        data = null;
+                        link = null;
+                    }, 100);
+                }
+
+                showFile(blob);
+            });
         }
 
         return {
             theadV, parameterV, tbody, getDataList, isChart, userRole, startTime, endTime,
-			chartData, lan, sidebarW, routeList, routeType, isFileTime, handleCellClick, 
-            initDownloadExcel, uploadStartTime, uploadEndTime,
+			chartData, lan, sidebarW, routeList, routeType, isFileTime, handleCellClick, orgName,
+            initDownloadExcel, uploadStartTime, uploadEndTime, firstSubmitStartTime, firstSubmitEndTime, title, subtitle,
         }
     }
 }

@@ -25,6 +25,10 @@
 				    <span class="label">{{lan['总拍数']}}</span>
 				    <input type="text" v-model="detailO.taskNumber" />
 				</li>
+                <li>
+				    <span class="label">{{lan['年度预算']}}</span>
+				    <input type="text" v-model="detailO.annualBudget" />
+				</li>
             </ul>
             <div class="edit-foot">
                 <el-button type="primary" @click="save">{{lan['保存']}}</el-button>
@@ -51,7 +55,7 @@ export default {
         const { userKey, siteKey, code, drive, device, lan } = toRefs(useState());
         const router = useRouter();
 
-        const detailO = ref({'_key': '', 'year': '', 'orgKey': '', 'taskNumber': ''});
+        const detailO = ref({'_key': '', 'year': '', 'orgKey': '', 'taskNumber': '', 'annualBudget': ''});
 
         const orgList = ref([]);
         const getOrgList = async () => {
@@ -68,7 +72,13 @@ export default {
 
         onMounted(() => {
             getOrgList();
-            detailO.value = {'_key': props.detail._key || '', 'year': props.detail.year || new Date().getFullYear(), 'orgKey': props.detail.orgKey || '', 'taskNumber': props.detail.taskNumber || ''};
+            detailO.value = {
+                '_key': props.detail._key || '', 
+                'year': props.detail.year || new Date().getFullYear(), 
+                'orgKey': props.detail.orgKey || '', 
+                'taskNumber': props.detail.taskNumber || '',
+                'annualBudget': props.detail.annualBudget || '',
+            };
         });
 		
         const close = (f = 0) => {
@@ -91,7 +101,8 @@ export default {
         }
 
         const addOrgTask = async () => {
-            const result = await supplierMS.addOrgTask(detailO.value.year, detailO.value.orgKey, Number(detailO.value.taskNumber));
+            // Number(
+            const result = await supplierMS.addOrgTask(Number(detailO.value.year), detailO.value.orgKey, Number(detailO.value.taskNumber), Number(detailO.value.annualBudget));
             if(result.status == 200){
                 close(2);
             }else{
@@ -100,7 +111,7 @@ export default {
         }
 
         const editOrgTask = async (taskKey) => {
-            const result = await supplierMS.editOrgTask(taskKey, {'year': detailO.value.year, 'orgKey': detailO.value.orgKey, 'taskNumber': Number(detailO.value.taskNumber)});
+            const result = await supplierMS.editOrgTask(taskKey, {'year': Number(detailO.value.year), 'orgKey': detailO.value.orgKey, 'taskNumber': Number(detailO.value.taskNumber), 'annualBudget': Number(detailO.value.annualBudget)});
             if(result.status == 200){
                 close(2);
             }else{

@@ -30,7 +30,9 @@ app.use(SocketIO, {
     connection: baseURL,
 });
 
-app.use(ElementPlus);
+app.use(ElementPlus, {
+    locale: localStorage.getItem('lanType') ? localStorage.getItem('lanType') == 'zh' ? ElementPlusLocaleZhCn : '' : navigator.language.indexOf('en') > -1 ? '' : ElementPlusLocaleZhCn,
+});
 
 app.directive('focus', {
     mounted(el) {

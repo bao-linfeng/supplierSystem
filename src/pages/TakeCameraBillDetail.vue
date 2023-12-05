@@ -80,7 +80,7 @@
         </div>
         <div class="amount-box">
             <span>{{lan['金额合计']}}</span>
-            <span>${{BillDetail.totalAmount}}</span>
+            <span>${{BillDetail.totalAmountO}}</span>
         </div>
         <!-- 分页 -->
         <!-- <PaginationModule :defaultPage="page" :pages="pages" :total="total" v-on:change-page="changePage" /> -->
@@ -95,7 +95,7 @@
 import { ref, reactive, onMounted, watch, watchEffect, computed, provide,readonly, toRefs } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useState, changePropertyValue } from '../store';
-import { getQueryVariable, getLocalTime } from '../util/ADS';
+import { getQueryVariable, getLocalTime, thousands } from '../util/ADS';
 import { supplierMS, org } from '../util/api';
 import PaginationModule from '../components/PaginationModule.vue';
 import BillAPModule from '../components/BillAPModule.vue';
@@ -103,7 +103,9 @@ import BillDetail from '../components/BillDetail.vue';
 
 export default {
     components: {
-        PaginationModule, BillAPModule, BillDetail, 
+        PaginationModule, 
+        BillAPModule, 
+        BillDetail, 
     },
     name: 'takeCameraBillDetail',
     props: ['id'],
@@ -113,7 +115,7 @@ export default {
         const id = props.id;
 
         const theadV2 = ref(['ProjectID', '起止时间', '电子谱', '影像数', '金额小计', '操作']);
-        const parameterV2 = ref(['ProjectID', 'time', 'isLeadImagesO','summaryImgNumber','summaryAmountO', 'action']);
+        const parameterV2 = ref(['ProjectID', 'time', 'isLeadImagesO','summaryImgNumberO','summaryAmountO', 'action']);
 
         const page = ref(1);
         const pages = ref(0);
@@ -143,11 +145,13 @@ export default {
                 BillDetail.value = result.data;
                 BillDetail.value.createTimeO = getLocalTime(result.data.createTime, '-', 1);
                 BillDetail.value.statusO = lan.value[statusO[result.data.status]];
+                BillDetail.value.totalAmountO = thousands(BillDetail.value.totalAmount);
                 summaryInfo.value = result.data.summaryInfo.map((ele) => {
                     ele.ProjectID = BillDetail.value.ProjectID || '';
                     ele.time = ele.weekStart+'~'+ele.weekEnd;
                     ele.isLeadImagesO = ele.isLeadImages == 1 ? lan.value['是'] : lan['否'];
-                    ele.summaryAmountO = '$'+ele.summaryAmount;
+                    ele.summaryAmountO = '$'+thousands(ele.summaryAmount);
+                    ele.summaryImgNumberO = thousands(ele.summaryImgNumber);
                     return ele;
                 });
             }
@@ -155,7 +159,7 @@ export default {
 
         const tbody = ref([]);
         const theadV = ref(['ProjectID', '拍机人', '谱ID', '谱名', '卷名', '影像数', '单价', '金额小计', '电子谱', '单双拍', '提交日期']);
-        const parameterV = ref(['ProjectID', 'userName', 'gcKey', 'genealogyName', 'volumeNumber', 'imgNumber', 'priceO', 'amountO', 'isLeadImagesO', 'singleOrTwoO', 'submitTimeO']);
+        const parameterV = ref(['ProjectID', 'userName', 'gcKey', 'genealogyName', 'volumeNumber', 'imgNumberO', 'priceO', 'amountO', 'isLeadImagesO', 'singleOrTwoO', 'submitTimeO']);
 
         const getBillDetailList = async (billKey, summaryKey) => {
             tbody.value = [];
@@ -168,9 +172,10 @@ export default {
                     ele.passTimeO = ele.passTime ? getLocalTime(ele.passTime, '.', 1) : '';
                     ele.submitTimeO = ele.submitTime ? getLocalTime(ele.submitTime, '.', 1) : '';
                     ele.priceO = '$'+ele.price;
-                    ele.amountO = '$'+ele.amount;
+                    ele.amountO = '$'+thousands(ele.amount);
                     ele.isLeadImagesO = ele.isLeadImages == 1 ? lan.value['是'] : lan.value['否'];
                     ele.singleOrTwoO = ele.singleOrTwo == 1 ? lan.value['单拍'] : ele.singleOrTwo == 2 ? lan.value['双拍'] : '';
+                    ele.imgNumberO = thousands(ele.imgNumber);
                     return ele;
                 });
             }

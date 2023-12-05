@@ -64,8 +64,8 @@ export default {
         const router = useRouter();
         const id = props.id;
 
-        const theadV = ref(['机构名称', '操作账号', '操作日期', '动作', '关联单据']);
-        const parameterV = ref(['orgName', 'userName', 'createTimeO', 'log', 'logType']);
+        const theadV = ref(['机构名称', '操作账号', '操作日期', '日志', '日志类型']);
+        const parameterV = ref(['orgName', 'userName', 'createTimeO', 'log', 'type']);
 
         const page = ref(1);
         const pages = ref(0);
@@ -84,6 +84,7 @@ export default {
                 tbody.value = result.result.list.map((ele) => {
                     ele.organizationNo = ele.organizationNo ? ele.organizationNo +'('+ele.orgName+')' : '';
                     ele.createTimeO = ele.createTime ? getLocalTime(ele.createTime) : '';
+                    ele.type = lanType.value == 'en' ? ele.logTypeEnglish : ele.logType;
                     return ele;
                 });
                 pages.value = result.result.pageNum;
@@ -91,17 +92,22 @@ export default {
             }
         }
 
+        const getLogType = async () => {
+            const result = await supplierMS.getLogType({});
+			if(result.status == 200){
+                logTypeList.value = result.data.map((ele) => {
+                    ele.label = lanType.value == 'en' ? ele.en : ele.zh;
+                    ele.value = ele.zh;
+                    return ele;
+                });
+                logTypeList.value.unshift({'label': lan.value['全部类型'], 'value': ''});
+            }
+        }
+
         const userKeyN = ref('');
 
         const logType = ref('');
-        const logTypeList = ref([
-            {'label': lan.value['全部类型'], 'value': ''}, 
-            {'label': lan.value['登录'], 'value': '登录'}, 
-            {'label': lan.value['退出'], 'value': '退出'},
-            {'label': lan.value['审批通过'], 'value': '审批通过'},
-            {'label': lan.value['创建发票'], 'value': '创建发票'},
-            {'label': lan.value['审批驳回'], 'value': '审批驳回'},
-        ]);
+        const logTypeList = ref([]);
 
         const orgList = ref([]);
         const orgKeyN = ref('');
@@ -151,6 +157,7 @@ export default {
                     userKeyN.value = userKey.value;
                 }
             }
+            getLogType();
             getOrgList();
             getDataList();
         });

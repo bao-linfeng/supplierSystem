@@ -1,19 +1,31 @@
 <template>
     <div class="contract-wrap" :style="{width: 'calc(100% - '+sidebarW+'px)'}">
         <div class="contract-head">
-            <h3>{{lan['年度任务完成度']}}</h3>
+            <h3>{{lan['年度报告']}}</h3>
             <div class="head-right">
                 <div class="chart-box" @click="isChart = true">
                     <span>{{lan['图表展示']}}</span>
                     <img src="../assets/chart.svg" alt="">
                 </div>
-                <el-date-picker
+                <!-- <el-date-picker
                     v-model="time"
                     type="daterange"
                     unlink-panels
                     :start-placeholder="lan['开始时间']"
                     :end-placeholder="lan['结束时间']"
-                />
+                /> -->
+                <el-date-picker
+                    class="w130"
+                    v-model="startTime"
+                    type="month"
+                    :placeholder="lan['开始时间']">
+                </el-date-picker>
+                <el-date-picker
+                    class="w130"
+                    v-model="endTime"
+                    type="month"
+                    :placeholder="lan['结束时间']">
+                </el-date-picker>
                 <el-select v-if="userRole >= 1 && userRole <= 3" v-model="orgKeyN" class="org-select" :placeholder="lan['机构筛选']">
                     <el-option v-for="item in orgList" :key="item.value" :label="item.label" :value="item.value" />
                 </el-select>
@@ -42,7 +54,8 @@
                 </tbody>
             </table>
         </div>
-		<ChartModule v-if="isChart" :year="Date.now()" :orgName="orgName" :chartData="chartData" v-on:close="isChart = false" />
+		<!-- <ChartModule v-if="isChart" :year="Date.now()" :orgName="orgName" :chartData="chartData" v-on:close="isChart = false" /> -->
+        <EchartsModule v-if="isChart" :title="title" :subtitle="subtitle+' '+orgName" :chartData="chartData" :stackArea="true" v-on:close="isChart = false" />
     </div>
 </template>
 
@@ -50,13 +63,14 @@
 import { ref, reactive, onMounted, watch, watchEffect, computed, provide,readonly, toRefs } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useState, changePropertyValue } from '../store';
-import { getQueryVariable, getLocalTime } from '../util/ADS';
+import { getQueryVariable, getLocalTime, getCurrentMonthZero, getDays, thousands } from '../util/ADS';
 import { supplierMS, org } from '../util/api';
 import ChartModule from '../components/ChartModule.vue';
+import EchartsModule from '../components/EchartsModule.vue';
 
 export default {
     components: {
-        ChartModule, 
+        ChartModule, EchartsModule, 
     },
     name: 'yearGather',
     props: ['id'],
@@ -65,8 +79,8 @@ export default {
         const router = useRouter();
         const id = props.id;
 
-        const theadV = ref(['年度月份', '机构名称', '总册数', '目标数量', '已拍数量', '完成率']);
-        const parameterV = ref(['englishName', 'orgName', 'volumeNumber', 'taskNumber', 'imageNumber', 'finishRate']);
+        const theadV = ref(['年度月份', '机构名称', '目标拍数', '通过拍数', '拍数达标率(%)', '应支付总金额', '预算达标率', '完结谱目数', '编目完结谱目数', '可索引谱目数']);
+        const parameterV = ref(['englishName', 'orgName', 'taskNumberO', 'passImageCountO', 'passImageCountP', 'paidInAmountO', 'budgetP', 'passGCCountO', 'GCOverCountO', 'IndexGCCountO']);
 
         const orgList = ref([]);
         const orgKeyN = ref('');
@@ -78,34 +92,60 @@ export default {
         const chartData = ref({'labels': [], 'data': [], 'label': []});
         const getDataList = async () => {
 			changePropertyValue('isLoading', true);
-            const result = await supplierMS.getAnnualTaskCompletion(startTime.value, endTime.value, orgKeyN.value, siteKey.value);
+            const result = await supplierMS.supplierImageAmount({
+                "siteKey": "1528234980", 
+                'orgKey': orgKeyN.value,
+                'startTime': startTime.value ? new Date(startTime.value).getTime() : '',
+                'endTime': endTime.value ? new Date(endTime.value).getTime()+getDays(new Date(endTime.value).getTime())-1 : '',
+            });
             changePropertyValue('isLoading', false);
 			if(result.status == 200){
-                tbody.value = result.data.map((ele) => {
-                    if(ele.englishName == '数据汇总'){
-                        ele.englishName = lan.value[ele.englishName];
+                tbody.value = result.data.map((ele, i) => {
+                    if(!ele.year){
+                        ele.englishName = lan.value['合计'];
                     }else{
                         ele.englishName = ele.year+''+(ele.month <= 9 ? '0'+ele.month : ele.month);
+                        ele.orgName = ele.orgName ? ele.orgName : '全部机构';
+                        if(!i){
+                            ele.taskNumberC = ele.taskNumber;
+                            ele.passImageCountC = ele.passImageCount;
+                        }else{
+                            ele.taskNumberC = ele.taskNumber + result.data[i - 1].taskNumberC;
+                            ele.passImageCountC = ele.passImageCount + result.data[i - 1].passImageCountC;
+                        }
                     }
-                    ele.orgName = ele.orgName ? ele.orgName : '全部机构';
-                    ele.volumeNumber = ele.volumeNumber || 0;
-                    ele.organizationNo = ele.organizationNo ? ele.organizationNo +'('+ele.orgName+')' : lan.value['全部机构'];
-                    ele.finishRate = ele.taskNumber ? (100*(ele.imageNumber/ele.taskNumber)).toFixed(2)+'%' : '0%';
+                    
+                    ele.passImageCountP = ele.taskNumber ? (100*((ele.passImageCount || 0)/ele.taskNumber)).toFixed(2)+'%' : '0%';
+                    ele.budgetP = ele.paidInAmount ? (100*((ele.budget || 0)/ele.paidInAmount)).toFixed(2)+'%' : '0%';
+
+                    ele.taskNumberO = thousands(ele.taskNumber);
+                    ele.passImageCountO = thousands(ele.passImageCount);
+                    ele.paidInAmountO = '$'+thousands(ele.paidInAmount || 0);
+                    ele.passGCCountO = thousands(ele.passGCCount);
+                    ele.GCOverCountO = thousands(ele.GCOverCount);
+                    ele.IndexGCCountO = thousands(ele.IndexGCCount);
+
                     return ele;
                 });
 
-                let chartDataO = {'labels': [], 'data': [], 'label': [lan.value['总册数'], lan.value['已拍数量']]}, volumeNumber = [], imageNumber = [];
-                tbody.value.forEach((ele) => {
-                    if(ele.englishName == '数据汇总'){
+                console.log(tbody.value);
+
+                let chartDataO = {'labels': [], 'data': [], 'dataCount': [], 'label': [lan.value['目标拍数'], lan.value['通过拍数']]}, taskNumberArr = [], passImageCountArr = [], taskNumberC = [], passImageCountC = [];
+                tbody.value.forEach((ele, i) => {
+                    if(ele.englishName == lan.value['合计']){
 
                     }else{
                         chartDataO.labels.push(ele.englishName); 
-                        volumeNumber.push(ele.volumeNumber);
-                        imageNumber.push(ele.imageNumber);
+                        taskNumberArr.push(ele.taskNumber || 0);
+                        passImageCountArr.push(ele.passImageCount || 0);
+                        taskNumberC.push(ele.taskNumberC);
+                        passImageCountC.push(ele.passImageCountC);
                     }
                 });
-                chartDataO.data.push(volumeNumber); 
-                chartDataO.data.push(imageNumber); 
+                chartDataO.data.push(taskNumberArr); 
+                chartDataO.data.push(passImageCountArr); 
+                chartDataO.dataCount.push(taskNumberC);
+                chartDataO.dataCount.push(passImageCountC);
                 chartData.value = chartDataO;
             }
         }
@@ -141,6 +181,14 @@ export default {
         });
 
         const isChart = ref(false);
+        const title = ref(lan.value['年度报告']);
+        const subtitle = ref('');
+        watch(startTime, (nv, ov) => {
+            subtitle.value = getLocalTime(startTime.value, '/', 2) + '-' + getLocalTime((endTime.value), '/', 2);
+        });
+        watch(endTime, (nv, ov) => {
+            subtitle.value = getLocalTime(startTime.value, '/', 2) + '-' + getLocalTime((endTime.value), '/', 2);
+        });
 
         onMounted(() => {
             if(userRole.value >= 1 && userRole.value <= 3){
@@ -148,13 +196,19 @@ export default {
             }else{
                 orgKeyN.value = orgKey.value;
             }
+
+            startTime.value = getCurrentMonthZero();
+            endTime.value = getCurrentMonthZero(0);
+
+            subtitle.value = getLocalTime(startTime.value, '/', 2) + '-' + getLocalTime((endTime.value), '/', 2);
+
             getOrgList();
             getDataList();
         });
 
         return {
             theadV, parameterV, tbody, getDataList, time, orgList, orgKeyN, isChart, 
-			chartData, orgName, userRole, lan, sidebarW, 
+			chartData, orgName, userRole, lan, sidebarW, startTime, endTime, title, subtitle,
         }
     }
 }

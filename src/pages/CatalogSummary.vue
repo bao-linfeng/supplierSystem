@@ -10,16 +10,19 @@
                 <el-date-picker
                     class="w130"
                     v-model="startTime"
-                    type="month"
+                    :type="accountTime == 1 ? 'date' : 'month'"
                     :placeholder="lan['开始时间']">
                 </el-date-picker>
                 <el-date-picker
                     class="w130"
                     v-model="endTime"
-                    type="month"
+                    :type="accountTime == 1 ? 'date' : 'month'"
                     :placeholder="lan['结束时间']">
                 </el-date-picker>
-                
+                <el-select v-model="accountTime" class="w80">
+                    <el-option v-for="item in accountTimeList" :key="item.value" :label="item.label" :value="item.value" />
+                </el-select>
+
                 <el-button type="primary" @click="getDataList">{{lan['检索']}}</el-button>
                 <!-- <el-button type="primary" @click="initDownloadExcel">{{lan['下载']}}</el-button> -->
             </div>
@@ -62,34 +65,38 @@ export default {
 
 		const startTime = ref('');
 		const endTime = ref('');
+        const accountTime = ref('1'); // 1日2周3月
+        const accountTimeList = ref([
+            {'label': '日', 'value': '1'},
+            {'label': '周', 'value': '2'},
+            {'label': '月', 'value': '3'}
+        ]);
         
         const tableData = ref([]);
         const chartData = ref({'labels': [], 'data': [], 'label': []});
         // 机构汇总统计数据
         const getDataList = async () => {
+            console.log(startTime.value, endTime.value);
             tableData.value = [];
 			changePropertyValue('isLoading', true);
-            const result = await supplierMS.GCOverStatisticsAllOrg({
+            const result = await supplierMS.GCOverStatisticsAllOrgSingleData({
                 'startTime': startTime.value ? new Date(startTime.value).getTime() : '',
-                'endTime': endTime.value ? new Date(endTime.value).getTime()+getDays(new Date(endTime.value).getTime())-1 : '',
+                'endTime': endTime.value ? new Date(endTime.value).getTime()+(accountTime.value == 1 ? 24*60*60*1000 - 1 : 0) : '',
+                'accountTime': accountTime.value,
             });
             changePropertyValue('isLoading', false);
 			if(result.status == 200){
                 tableData.value = result.data.map((ele) => {
-                    if(ele.englishName == '数据汇总'){
-                        ele.englishName = lan.value[ele.englishName];
+                    if(ele.sTime){
+                        if(ele.eTime && accountTime.value == 2){
+                            ele.englishName = getLocalTime(ele.sTime, '-', 1) + '~' + getLocalTime(ele.eTime, '-', 1);
+                        }else{
+                            ele.englishName = getLocalTime(ele.sTime, '-', accountTime.value == 3 ? 2 : 1);
+                        }
                     }else{
-                        ele.englishName = ele.year+''+(ele.month <= 9 ? '0'+ele.month : ele.month);
+                        ele.englishName = '数据汇总';
                     }
 
-                    ele.allOrgNumberFP = ele.allOrgNumberFP ? (ele.allOrgNumberFP*100).toFixed(2)+'%' : '0%';
-                    ele.aaFP = ele.aaFP ? (ele.aaFP*100).toFixed(2)+'%' : '0%';
-                    ele.bbFP = ele.bbFP ? (ele.bbFP*100).toFixed(2)+'%' : '0%';
-                    ele.bbcFP = ele.bbcFP ? (ele.bbcFP*100).toFixed(2)+'%' : '0%';
-                    ele.ccFP = ele.ccFP ? (ele.ccFP*100).toFixed(2)+'%' : '0%';
-                    ele.ddFP = ele.ddFP ? (ele.ddFP*100).toFixed(2)+'%' : '0%';
-                    ele.eeFP = ele.eeFP ? (ele.eeFP*100).toFixed(2)+'%' : '0%';
-                    ele.ffFP = ele.ffFP ? (ele.ffFP*100).toFixed(2)+'%' : '0%';
                     
                     return ele;
                 });
@@ -145,11 +152,26 @@ export default {
         // 可视化
         const isChart = ref(false);
 
+        watch(accountTime, (nv, ov) => {
+            if(nv == 1){
+                startTime.value = getCurrentMonthZero(0);
+                endTime.value = new Date(getCurrentMonthZero(0)).getTime() + getDays() - 24*60*60*1000;
+            }else{
+                startTime.value = getCurrentMonthZero();
+                endTime.value = getCurrentMonthZero(-1);
+            }
+
+            getDataList();
+        });
+
         onMounted(() => {
-            startTime.value = getCurrentMonthZero();
-            endTime.value = getCurrentMonthZero(0);
+            startTime.value = getCurrentMonthZero(0);
+            endTime.value = new Date(getCurrentMonthZero(0)).getTime() + getDays() - 24*60*60*1000;
 
             tableH.value = window.innerHeight - 100;
+
+            changePropertyValue('navActive', '/catalogSummary');
+            changePropertyValue('sidebarW', 0);
 
             getOrgList();
             getDataList();
@@ -225,7 +247,7 @@ export default {
         return {
             tableData, getDataList, isChart, userRole, startTime, endTime,
 			chartData, lan, sidebarW, routeList, routeType, 
-            initDownloadExcel, tableH,
+            initDownloadExcel, tableH, accountTime, accountTimeList,
         }
     }
 }
@@ -266,6 +288,9 @@ export default {
 }
 .w130{
     width: 130px !important;
+}
+.w80{
+    width: 80px;
 }
 .el-table-box{
     width: calc(100% - 40px);
