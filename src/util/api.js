@@ -670,6 +670,9 @@ const supplierMS = {
     supplierImageAmount(param){// 供应商拍数金额统计
         return request.post('/supplierMS/supplierImageAmount', param);
     },
+    getHomePageYear(param){// 首页（年统计）
+        return request.get('/supplierMS/homePageYear', param);
+    },
 }
 
 export {

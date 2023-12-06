@@ -9,7 +9,7 @@
         <div class="supplier-content">
             <h3 class="title">{{lan['待做事项']}}</h3>
             <ul class="todo-ul">
-                <li v-for="(item, index) in todo" :key="index" @click="goRouter(index)">
+                <li v-for="(item, index) in todo" :key="index">
                     <p>{{lan[item.name]}}:</p>
                     <span>{{item.count}}</span>
                 </li>
@@ -18,7 +18,7 @@
         <div class="supplier-foot">
             <h3 class="title">{{lan['数据汇总']}}</h3>
             <ul class="data-count">
-                <li v-for="(item, index) in dataCount" :key="index">
+                <li v-for="(item, index) in dataCount" :key="index" @click="goRouter(index)">
                     <img class="chart" :src="item.img" alt="">
                     <div class="data-box">
                         <p>{{lan[item.name]}}</p>
@@ -26,6 +26,49 @@
                     </div>
                 </li>
             </ul>
+        </div>
+        <div class="supplier-foot" v-if="userRole >= 1 && userRole <= 3">
+            <div class="head">
+                <h3>{{lan['年度一栏表']}}</h3>
+                <el-date-picker
+                    class="w130"
+                    v-model="year"
+                    :clearable="false"
+                    type="year">
+                </el-date-picker>
+            </div>
+            <div class="supplier-foot">
+                <h3 class="title fontSize16">{{lan['年度发票情况']}}</h3>
+                <ul class="todo-ul">
+                    <li v-for="(item, index) in BillCount" :key="index">
+                        <p>{{lan[item.name]}}:</p>
+                        <span>{{item.count}}</span>
+                    </li>
+                </ul>
+                <ul class="todo-ul">
+                    <li v-for="(item, index) in PayCount" :key="index">
+                        <p>{{lan[item.name]}}:</p>
+                        <span>{{item.count}}</span>
+                    </li>
+                </ul>
+            </div>
+            <div class="supplier-foot">
+                <h3 class="title fontSize16">{{lan['年度收购情况']}}</h3>
+                <el-table 
+                    class="el-table-box marginT20"
+                    border
+                    :data="tableData">
+                    <el-table-column prop="type" :label="yearO+lan['年度']" :align="'center'" />
+                    <el-table-column prop="allCount" :label="lan['数据汇总']" :align="'center'" />
+                    <el-table-column prop="寻源堂" :label="lan['寻源堂']" :align="'center'" />
+                    <el-table-column prop="成蹊" :label="lan['成蹊']" :align="'center'" />
+                    <el-table-column prop="馨里有谱" :label="lan['馨里有谱']" :align="'center'" />
+                    <el-table-column prop="仰沁" :label="lan['仰沁']" :align="'center'" />
+                    <el-table-column prop="良友科苑" :label="lan['良友科苑']" :align="'center'" />
+                    <el-table-column prop="时光科技" :label="lan['时光科技']" :align="'center'" />
+                    <el-table-column prop="古中山" :label="lan['古中山']" :align="'center'" />
+                </el-table>
+            </div>
         </div>
     </div>
 </template>
@@ -55,36 +98,57 @@ export default {
         const id = props.id;
 
         const todo = ref([
-            {'name': '影像待审核', 'count': 0},
-            {'name': '待结算发票', 'count': 0},
-            // {'name': '家谱索引待审核', 'count': 0},
-            // {'name': '家谱索引待结算', 'count': 0}
+            {'name': '新谱查重(条)', 'count': 0},
+            {'name': '查重待议(条)', 'count': 0},
+            {'name': '编目待议(条)', 'count': 0},
+            {'name': '影像审核(册)', 'count': 0},
         ]);
 
         const dataCount = ref([
             {'name': '谱目总数', 'count': 0, 'img': total},
-            {'name': '影像页数', 'count': 0, 'img': images},
-            {'name': '影像支出', 'count': 0, 'img': amount},
+            {'name': '总影像页数', 'count': 0, 'img': images},
+            {'name': '影像总支出', 'count': 0, 'img': amount},
             {'name': '影像机构', 'count': 0, 'img': org},
-            // {'name': '数字化节点', 'count': 0},
-            // {'name': '数字化支出', 'count': 0},
-            // {'name': '数字化机构', 'count': 0}
         ]);
 
-        const UP = ref(0.18);
-        const currencySign = ref('$');
+        const BillCount = ref([
+            {'name': '申请发票数', 'count': 0,},
+            {'name': '已确认发票数', 'count': 0,},
+            {'name': '已付款发票数', 'count': 0,},
+        ]);
+
+        const PayCount = ref([
+            {'name': '申请金额(应付)', 'count': 0,},
+            {'name': '已确认金额(实付)', 'count': 0,},
+            {'name': '已付款金额(实付)', 'count': 0,},
+        ]);
+
+        const year = ref(new Date().getFullYear()+'');
+        const yearO = ref(new Date().getFullYear());
+
+        const tableData = ref([]);
+
+        watch(year, (nv, ov) => {
+            console.log(new Date(nv).getFullYear());
+            yearO.value  = new Date(nv).getFullYear();
+            getHomePageYear(new Date(nv).getFullYear());
+        });
 
         const getHomePage = async () => {
-            // changePropertyValue('isLoading', true);
             const result = await supplierMS.getHomePage(userKey.value, siteKey.value);
-            // changePropertyValue('isLoading', false);
             if(result.status == 200){
                 todo.value.forEach((ele, i) => {
                     if(i === 0){
-                        ele.count = thousands(result.data.waitReviewCount);
+                        ele.count = thousands(result.data.sumbmitNum);
                     }
                     if(i === 1){
-                        ele.count = thousands(result.data.waitSettlementCount);
+                        ele.count = thousands(result.data.toBeDiscussedGCNumber);
+                    }
+                    if(i === 2){
+                        ele.count = thousands(result.data.checkTaskNumber);
+                    }
+                    if(i === 3){
+                        ele.count = thousands(result.data.waitReviewCount);
                     }
                 });
                 dataCount.value.forEach((ele, i) => {
@@ -98,9 +162,60 @@ export default {
                         ele.count = '$'+thousands(result.data.totalAmount || 0);
                     }
                     if(i === 3){
-                        ele.count = thousands(result.data.allImageOrgCount - 1);
+                        ele.count = thousands(result.data.allImageOrgCount);
                     }
                 });
+                if(userRole.value >= 1 && userRole.value <= 3){
+                    getHomePageYear(year.value);
+                }
+            }else{
+
+            }
+        }
+
+        const getHomePageYear = async (year) => {
+            const result = await supplierMS.getHomePageYear({
+                'year': year
+            });
+            if(result.status == 200){
+                BillCount.value.forEach((ele, i) => {
+                    if(i === 0){
+                        ele.count = thousands(result.data.waitSettlementCount);
+                    }
+                    if(i === 1){
+                        ele.count = thousands(result.data.settlementCount);
+                    }
+                    if(i === 2){
+                        ele.count = thousands(result.data.paidCount);
+                    }
+                });
+                PayCount.value.forEach((ele, i) => {
+                    if(i === 0){
+                        ele.count = '$'+thousands(result.data.waitSettlementAmount);
+                    }
+                    if(i === 1){
+                        ele.count = '$'+thousands(result.data.settlementAmount);
+                    }
+                    if(i === 2){
+                        ele.count = '$'+thousands(result.data.paidAmount || 0);
+                    }
+                });
+                tableData.value = result.data.resultArray.map((ele, i) => {
+                    ele.type = lan.value[ele.type];
+                    if(i >= 2){
+                        ele.allCount = ele.allCount+'%';
+                        ele['仰沁'] = ele['仰沁']+'%';
+                        ele['古中山'] = ele['古中山']+'%';
+                        ele['寻源堂'] = ele['寻源堂']+'%';
+                        ele['成蹊'] = ele['成蹊']+'%';
+                        ele['时光科技'] = ele['时光科技']+'%';
+                        ele['良友科苑'] = ele['良友科苑']+'%';
+                        ele['馨里有谱'] = ele['馨里有谱']+'%';
+                    }
+                    return ele;
+                });
+            }else{
+
             }
         }
 
@@ -117,15 +232,13 @@ export default {
         });
 
         const goRouter = (i) => {
-            if(i == 1){
-                router.push(userRole.value >= 1 && userRole.value <= 3 ? '/takeCameraBillList' : '/boBeSettledVolumeList');
-            }else{
-                // createMsg('请去家谱查重系统审核', true);
+            if(i == 3){
+                router.push('/orgList');
             }
         }
 
         return {
-            todo, dataCount, language, lan, sidebarW, goRouter, 
+            todo, dataCount, language, lan, sidebarW, goRouter, BillCount, PayCount, tableData, yearO, year, userRole,
         }
     }
 }
@@ -171,9 +284,9 @@ export default {
     text-align: center;
     li{
         cursor: pointer;
-        margin-right: 200px;
         display: flex;
         align-items: center;
+        width: 25%;
         span{
             font-size: 20px;
             color: #358acd;
@@ -257,6 +370,24 @@ export default {
     }
     .width120{
         width: 120px;
+    }
+}
+.fontSize16{
+    font-size: 16px;
+}
+.marginT20{
+    margin-top: 20px;
+}
+.head{
+    display: flex;
+    // justify-content: space-between;
+    align-items: center;
+    height: 60px;
+    line-height: 60px;
+    color: #358acd;
+    border-bottom: 1px solid #ddd;
+    h3{
+        margin-right: 20px;
     }
 }
 </style>
