@@ -61,7 +61,7 @@ import { ref, reactive, toRefs, watch, inject, onMounted } from 'vue';
 import { useState, changePropertyValue } from '../store';
 import { useRoute, useRouter } from 'vue-router';
 import { supplierMS, upload } from '../util/api';
-import { getQueryVariable, getLocalTime, createMsg, thousands } from '../util/ADS';
+import { getQueryVariable, getLocalTime, createMsg, thousands, initDownloadExcel } from '../util/ADS';
 
 export default {
     components: {
@@ -160,10 +160,19 @@ export default {
 			if(result.status == 200){
                 detail.value.deductionAmount = result.result;
                 detail.value.paidInAmount = (detail.value.totalAmount + detail.value.deductionAmount).toFixed(2);
-            }else if(result.status == 201){
-                createMsg(result.msg);
+            }else if(result.status == 301){
+                let aoa = [], t = [];
+                ['谱名', '卷名', '错误'].forEach((ele) => {
+                    t.push(ele);
+                });
+                aoa.push(t);
+                result.result.forEach((ele) => {
+                    aoa.push([ele.genealogyName, ele.volumeNumber, ele.errorStr]);
+                });
+                createMsg('数据有异常，请查看excel！');
+                initDownloadExcel(aoa, '扣款附件错误');
             }else{
-                console.log();
+                createMsg(result.msg);
             }
         }
 
