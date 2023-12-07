@@ -575,7 +575,8 @@ export default {
         position: relative;
         width: 100%;
         height: 40px;
-        background: #D1D1D1;
+        background: #f5f7fa;
+        color: #909399;
         position: sticky;
         top: 0;
         z-index: 2;

@@ -40,13 +40,13 @@
             <div class="supplier-foot">
                 <h3 class="title fontSize16">{{lan['年度发票情况']}}</h3>
                 <ul class="todo-ul">
-                    <li v-for="(item, index) in BillCount" :key="index">
+                    <li class="w33" v-for="(item, index) in BillCount" :key="index">
                         <p>{{lan[item.name]}}:</p>
                         <span>{{item.count}}</span>
                     </li>
                 </ul>
                 <ul class="todo-ul">
-                    <li v-for="(item, index) in PayCount" :key="index">
+                    <li class="w33" v-for="(item, index) in PayCount" :key="index">
                         <p>{{lan[item.name]}}:</p>
                         <span>{{item.count}}</span>
                     </li>
@@ -291,6 +291,9 @@ export default {
             font-size: 20px;
             color: #358acd;
             margin-left: 10px;
+        }
+        &.w33{
+            width: 33%;
         }
     }
 }

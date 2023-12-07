@@ -459,4 +459,5 @@ input{
 .is-scrolling-none .el-table th, .el-table tr {
   background-color: #fff !important;
 }
+
 </style>
