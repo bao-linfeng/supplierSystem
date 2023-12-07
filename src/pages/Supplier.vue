@@ -162,7 +162,7 @@ export default {
                         ele.count = '$'+thousands(result.data.totalAmount || 0);
                     }
                     if(i === 3){
-                        ele.count = thousands(result.data.allImageOrgCount);
+                        ele.count = thousands(result.data.allImageOrgCount - 1);
                     }
                 });
                 if(userRole.value >= 1 && userRole.value <= 3){
