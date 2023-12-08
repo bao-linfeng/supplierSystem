@@ -9,7 +9,7 @@
         <div class="supplier-content">
             <h3 class="title">{{lan['待做事项']}}</h3>
             <ul class="todo-ul">
-                <li v-for="(item, index) in todo" :key="index">
+                <li v-for="(item, index) in todo" :key="index" v-show="!(userRole >= 4 && index == 2)">
                     <p>{{lan[item.name]}}:</p>
                     <span>{{item.count}}</span>
                 </li>
@@ -18,7 +18,7 @@
         <div class="supplier-foot">
             <h3 class="title">{{lan['数据汇总']}}</h3>
             <ul class="data-count">
-                <li v-for="(item, index) in dataCount" :key="index" @click="goRouter(index)">
+                <li v-for="(item, index) in dataCount" :key="index" @click="goRouter(index)" v-show="!(userRole >= 4 && index == 3)">
                     <img class="chart" :src="item.img" alt="">
                     <div class="data-box">
                         <p>{{lan[item.name]}}</p>
@@ -27,7 +27,7 @@
                 </li>
             </ul>
         </div>
-        <div class="supplier-foot" v-if="userRole >= 1 && userRole <= 3">
+        <div class="supplier-foot">
             <div class="head">
                 <h3>{{lan['年度一栏表']}}</h3>
                 <el-date-picker
@@ -52,7 +52,7 @@
                     </li>
                 </ul>
             </div>
-            <div class="supplier-foot">
+            <div class="supplier-foot" v-if="userRole >= 1 && userRole <= 3">
                 <h3 class="title fontSize16">{{lan['年度收购情况']}}</h3>
                 <el-table 
                     class="el-table-box marginT20"
@@ -165,9 +165,7 @@ export default {
                         ele.count = thousands(result.data.allImageOrgCount - 1);
                     }
                 });
-                if(userRole.value >= 1 && userRole.value <= 3){
-                    getHomePageYear(year.value);
-                }
+                getHomePageYear(year.value);
             }else{
 
             }
@@ -175,6 +173,7 @@ export default {
 
         const getHomePageYear = async (year) => {
             const result = await supplierMS.getHomePageYear({
+                'userKey': userKey.value,
                 'year': year
             });
             if(result.status == 200){
