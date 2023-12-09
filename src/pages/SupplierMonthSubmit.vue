@@ -44,6 +44,7 @@
                 <el-table-column prop="uploadImageCountP" :label="lan['上传率(%)']" width="120" :align="'center'" />
                 <el-table-column prop="submitImageCountO" :label="lan['提交拍数']" :align="'center'" />
                 <el-table-column prop="submitImageCountP" :label="lan['提交完成率(%)']" width="120" :align="'center'" />
+                <el-table-column prop="uploadCVCountO" :label="lan['上传册数']" :align="'center'" />
                 <el-table-column prop="submitCVCountO" :label="lan['提交册数']" :align="'center'" />
                 <el-table-column prop="passCVCountO" :label="lan['通过册数']" :align="'center'" />
                 <el-table-column prop="overCVCountO" :label="lan['完结册数']" :align="'center'" />
@@ -98,7 +99,7 @@ export default {
             });
             changePropertyValue('isLoading', false);
 			if(result.status == 200){
-                let taskNumber = 0, uploadImageCount = 0, submitImageCount = 0, submitCVCount = 0, passCVCount = 0, overCVCount = 0;
+                let taskNumber = 0, uploadImageCount = 0, submitImageCount = 0, submitCVCount = 0, passCVCount = 0, overCVCount = 0, uploadCVCount = 0;
                 tableData.value = result.data.map((ele) => {
                     if(ele.englishName == '合计'){
                         ele.englishName = lan.value[ele.englishName];
@@ -115,6 +116,7 @@ export default {
                     submitCVCount = submitCVCount + (ele.submitCVCount || 0);
                     passCVCount = passCVCount + (ele.passCVCount || 0);
                     overCVCount = overCVCount + (ele.overCVCount || 0);
+                    uploadCVCount = uploadCVCount + (ele.uploadCVCount || 0);
 
                     ele.taskNumberO = thousands(ele.taskNumber);
                     ele.uploadImageCountO = thousands(ele.uploadImageCount);
@@ -122,6 +124,7 @@ export default {
                     ele.submitCVCountO = thousands(ele.submitCVCount);
                     ele.passCVCountO = thousands(ele.passCVCount);
                     ele.overCVCountO = thousands(ele.overCVCount);
+                    ele.uploadCVCountO = thousands(ele.uploadCVCount);
                     
                     return ele;
                 });
@@ -134,6 +137,7 @@ export default {
                     'submitCVCountO': thousands(submitCVCount),
                     'passCVCountO': thousands(passCVCount),
                     'overCVCountO': thousands(overCVCount),
+                    'uploadCVCountO': thousands(uploadCVCount),
                     'uploadImageCountP': taskNumber ? uploadImageCount ? (100*uploadImageCount/taskNumber).toFixed(2)+'%' : '0%' : '',
                     'submitImageCountP': taskNumber ? submitImageCount ? (100*submitImageCount/taskNumber).toFixed(2)+'%' : '0%' : '',
                 });

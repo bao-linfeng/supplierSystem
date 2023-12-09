@@ -22,7 +22,7 @@
                         <el-button @click="close(0)">{{lan['取消']}}</el-button>
                     </div>
                     <!-- v-if="detail.billHasDeduction || userKey == '1529192644'" -->
-                    <div class="deduction-wrap" v-if="detail.billHasDeduction || userKey == '1529192644'">
+                    <div class="deduction-wrap">
                         <h3 class="title">{{lan['扣款附件']}}</h3>
                         <a class="annex" v-if="detail.simplePath" :href="baseURL+detail.simplePath" download>{{detail.originalName}}</a>
                         <div class="input-box" v-if="!detail.billHasDeduction">
@@ -31,7 +31,8 @@
                         </div>
                         <div class="deduction-box">
                             <p>{{lan['应付金额']}}: ${{detail.totalAmountO}}</p>
-                            <p class="red">{{lan['卷差额']}}: ${{detail.deductionAmount}}</p>
+                            <!-- {{detail.deductionAmount}} -->
+                            <p class="red">{{lan['卷差额']}}: $ <input class="deductionAmount" type="text" v-model="deductionAmount" @change="handleChange" /></p>
                             <p>{{lan['实付金额']}}: ${{detail.paidInAmount}}</p>
                         </div>
                         <div class="btn-box" v-if="!detail.billHasDeduction">
@@ -130,8 +131,6 @@ export default {
             context.emit('save', '');
         }
 
-        const deductionAmount = ref('');
-
         const loadFile = async (e) => {
             let fd = new FormData();
             fd.append('file', e.target.files[0]);
@@ -148,6 +147,8 @@ export default {
             }
         }
 
+        const deductionAmount = ref(0);
+
         const getDeductionAmount = async () => {
             changePropertyValue('isLoading', true);
             const result = await supplierMS.getDeductionAmount({
@@ -158,7 +159,7 @@ export default {
             });
             changePropertyValue('isLoading', false);
 			if(result.status == 200){
-                detail.value.deductionAmount = result.result;
+                deductionAmount.value = detail.value.deductionAmount = result.result;
                 detail.value.paidInAmount = (detail.value.totalAmount + detail.value.deductionAmount).toFixed(2);
             }else if(result.status == 301){
                 let aoa = [], t = [];
@@ -176,6 +177,11 @@ export default {
             }
         }
 
+        const handleChange = () => {
+            console.log(deductionAmount.value);
+            detail.value.paidInAmount = (detail.value.totalAmount + Number(deductionAmount.value)).toFixed(2);
+        }
+
         const deductionBill = async () => {
             changePropertyValue('isLoading', true);
             const result = await supplierMS.deductionBill({
@@ -185,7 +191,7 @@ export default {
                 'simplePath': detail.value.simplePath,
                 'originalName': detail.value.originalName,
                 'billKey': props.dataKey,
-                'deductionAmount': detail.value.deductionAmount,
+                'deductionAmount': deductionAmount.value,
             });
             changePropertyValue('isLoading', false);
 			if(result.status == 200){
@@ -200,7 +206,8 @@ export default {
         });
 
         return {
-            close, save, approvalUserList, approvalOpinion, detail, approvalBill, isShow, lan, loadFile, deductionBill, deductionAmount, baseURL, userKey,
+            close, save, approvalUserList, approvalOpinion, detail, approvalBill, isShow, lan, loadFile, deductionBill, deductionAmount, baseURL, userKey, 
+            handleChange,
         }
     }
 }
@@ -301,7 +308,7 @@ export default {
 }
 .deduction-wrap{
     .deduction-box{
-        height: 30px;
+        height: 50px;
         display: flex;
         align-items: center;
         justify-content: space-between;
@@ -350,6 +357,11 @@ export default {
         color: #fff;
         display: block;
     }
+}
+.deductionAmount{
+    width: 120px;
+    height: 20px;
+    line-height: 20px;
 }
 @media screen  and (max-width: 799px){
     .module-box{

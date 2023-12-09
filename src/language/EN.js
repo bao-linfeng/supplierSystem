@@ -500,6 +500,8 @@ const EN = {
     '可拍条数': 'Can Take %',
     '重复条数': 'repeat %',
     '待议条数': 'discussed %',
+    '上传册数': 'Upload Volume',
+    '影像页数': 'Images',
 }
 
 export {
