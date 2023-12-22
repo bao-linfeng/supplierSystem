@@ -159,7 +159,7 @@ export default {
                         ele.count = thousands(result.data.allImageCount);
                     }
                     if(i === 2){
-                        ele.count = '$'+thousands(result.data.totalAmount || 0);
+                        ele.count = '$'+thousands(result.data.totalAmount || "0.00");
                     }
                     if(i === 3){
                         ele.count = thousands(result.data.allImageOrgCount - 1);
@@ -190,26 +190,35 @@ export default {
                 });
                 PayCount.value.forEach((ele, i) => {
                     if(i === 0){
-                        ele.count = '$'+thousands(result.data.waitSettlementAmount);
+                        ele.count = '$'+thousands(result.data.waitSettlementAmount || '0.00');
                     }
                     if(i === 1){
-                        ele.count = '$'+thousands(result.data.settlementAmount);
+                        ele.count = '$'+thousands(result.data.settlementAmount || '0.00');
                     }
                     if(i === 2){
-                        ele.count = '$'+thousands(result.data.paidAmount || 0);
+                        ele.count = '$'+thousands(result.data.paidAmount || '0.00');
                     }
                 });
                 tableData.value = result.data.resultArray.map((ele, i) => {
                     ele.type = lan.value[ele.type];
                     if(i >= 2){
-                        ele.allCount = ele.allCount+'%';
-                        ele['仰沁'] = ele['仰沁']+'%';
-                        ele['古中山'] = ele['古中山']+'%';
-                        ele['寻源堂'] = ele['寻源堂']+'%';
-                        ele['成蹊'] = ele['成蹊']+'%';
-                        ele['时光科技'] = ele['时光科技']+'%';
-                        ele['良友科苑'] = ele['良友科苑']+'%';
-                        ele['馨里有谱'] = ele['馨里有谱']+'%';
+                        ele.allCount = (ele.allCount || '0.00')+'%';
+                        ele['仰沁'] = (ele['仰沁'] || '0.00')+'%';
+                        ele['古中山'] = (ele['古中山'] || '0.00')+'%';
+                        ele['寻源堂'] = (ele['寻源堂'] || '0.00')+'%';
+                        ele['成蹊'] = (ele['成蹊'] || '0.00')+'%';
+                        ele['时光科技'] = (ele['时光科技'] || '0.00')+'%';
+                        ele['良友科苑'] = (ele['良友科苑'] || '0.00')+'%';
+                        ele['馨里有谱'] = (ele['馨里有谱'] || '0.00')+'%';
+                    }else{
+                        ele.allCount = thousands(ele.allCount);
+                        ele['仰沁'] = thousands(ele['仰沁']);
+                        ele['古中山'] = thousands(ele['古中山']);
+                        ele['寻源堂'] = thousands(ele['寻源堂']);
+                        ele['成蹊'] = thousands(ele['成蹊']);
+                        ele['时光科技'] = thousands(ele['时光科技']);
+                        ele['良友科苑'] = thousands(ele['良友科苑']);
+                        ele['馨里有谱'] = thousands(ele['馨里有谱']);
                     }
                     return ele;
                 });

@@ -22,7 +22,7 @@
                         <el-button @click="close(0)">{{lan['取消']}}</el-button>
                     </div>
                     <!-- v-if="detail.billHasDeduction || userKey == '1529192644'" -->
-                    <div class="deduction-wrap">
+                    <div class="deduction-wrap" v-if="detail.billHasDeduction || userKey == '1529192644'">
                         <h3 class="title">{{lan['扣款附件']}}</h3>
                         <a class="annex" v-if="detail.simplePath" :href="baseURL+detail.simplePath" download>{{detail.originalName}}</a>
                         <div class="input-box" v-if="!detail.billHasDeduction">
