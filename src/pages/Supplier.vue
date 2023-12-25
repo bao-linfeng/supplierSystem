@@ -190,13 +190,13 @@ export default {
                 });
                 PayCount.value.forEach((ele, i) => {
                     if(i === 0){
-                        ele.count = '$'+thousands(result.data.waitSettlementAmount || '0.00');
+                        ele.count = '$'+thousands((result.data.waitSettlementAmount).toFixed(2) || '0.00');
                     }
                     if(i === 1){
-                        ele.count = '$'+thousands(result.data.settlementAmount || '0.00');
+                        ele.count = '$'+thousands((result.data.settlementAmount).toFixed(2) || '0.00');
                     }
                     if(i === 2){
-                        ele.count = '$'+thousands(result.data.paidAmount || '0.00');
+                        ele.count = '$'+thousands((result.data.paidAmount).toFixed(2) || '0.00');
                     }
                 });
                 tableData.value = result.data.resultArray.map((ele, i) => {
