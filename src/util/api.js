@@ -673,6 +673,9 @@ const supplierMS = {
     getHomePageYear(param){// 首页（年统计）
         return request.get('/supplierMS/homePageYear', param);
     },
+    getPriceListDistinct(param){// 获取价格列表（去重）
+        return request.get('/supplierMS/getPriceListDistinct', param);
+    },
 }
 
 export {

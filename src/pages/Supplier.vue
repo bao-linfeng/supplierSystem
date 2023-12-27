@@ -16,7 +16,7 @@
             </ul>
         </div>
         <div class="supplier-foot">
-            <h3 class="title">{{lan['数据汇总']}}</h3>
+            <h3 class="title">{{lan['数据汇总(2022.9-至今)']}}</h3>
             <ul class="data-count">
                 <li v-for="(item, index) in dataCount" :key="index" @click="goRouter(index)" v-show="!(userRole >= 4 && index == 3)">
                     <img class="chart" :src="item.img" alt="">
@@ -190,13 +190,13 @@ export default {
                 });
                 PayCount.value.forEach((ele, i) => {
                     if(i === 0){
-                        ele.count = '$'+thousands((result.data.waitSettlementAmount).toFixed(2) || '0.00');
+                        ele.count = '$'+thousands((result.data.waitSettlementAmount).toFixed(2).replace(/(\d)(?=(\d{3})+\.)/g, '$1,') || '0.00');
                     }
                     if(i === 1){
-                        ele.count = '$'+thousands((result.data.settlementAmount).toFixed(2) || '0.00');
+                        ele.count = '$'+thousands((result.data.settlementAmount).toFixed(2).replace(/(\d)(?=(\d{3})+\.)/g, '$1,') || '0.00');
                     }
                     if(i === 2){
-                        ele.count = '$'+thousands((result.data.paidAmount).toFixed(2) || '0.00');
+                        ele.count = '$'+thousands((result.data.paidAmount).toFixed(2).replace(/(\d)(?=(\d{3})+\.)/g, '$1,') || '0.00');
                     }
                 });
                 tableData.value = result.data.resultArray.map((ele, i) => {

@@ -8,7 +8,7 @@
             <div class="head-right">
                 <el-checkbox v-if="(userRole < 1 || userRole > 3) && (settlementStatus == 'toBeSettled' || settlementStatus === 'all') && admin == 'admin' && total" v-model="isAllSelect">{{lan['全部选择']}}</el-checkbox>
                 <el-button v-if="(userRole < 1 || userRole > 3) && (settlementStatus == 'toBeSettled' || settlementStatus === 'all') && admin == 'admin' && total" class="marginL10" type="primary" @click="handleaddBill">{{lan['点击生成发票']}}</el-button>
-                <el-button v-if="settlementStatus == 'toBeSettled' || settlementStatus === 'all'" class="marginL10" type="primary" @click="handlePatchVolumes">{{lan['批量不可结算']}}</el-button>
+                <!-- <el-button v-if="settlementStatus == 'toBeSettled' || settlementStatus === 'all'" class="marginL10" type="primary" @click="handlePatchVolumes">{{lan['批量不可结算']}}</el-button> -->
             </div>
         </div>
         <div class="search-wrap">
@@ -43,7 +43,10 @@
                 <el-select v-if="['settled'].indexOf(settlementStatus) > -1" class="width150" v-model="hasDeduction">
                     <el-option v-for="item in hasDeductionList" :key="item.value" :label="item.label" :value="item.value" />
                 </el-select>
-                <el-input class="width150" v-model="price" :placeholder="lan['请输入价格']"></el-input>
+                <el-select class="width150" v-model="price"  :placeholder="lan['请输入价格']">
+                    <el-option v-for="item in priceList" :key="item.value" :label="item.label" :value="item.value" />
+                </el-select>
+                <!-- <el-input class="width150" v-model="price" :placeholder="lan['请输入价格']"></el-input> -->
                 <el-date-picker
                     class="width250"
                     v-model="time"
@@ -143,6 +146,12 @@ export default {
         const gcKey = ref('');
         const volumeKey = ref('');
         const price = ref('');
+        const priceList = ref([
+            {'label': '$0.09', 'value': '0.09'},
+            {'label': '$0.18', 'value': '0.18'},
+            {'label': '$0.1', 'value': '0.1'},
+            {'label': '$0.2', 'value': '0.2'},
+        ]);
         const condition = ref('');
         const hasDeduction = ref('');
         const conditionList = ref([
@@ -288,6 +297,18 @@ export default {
                     return ele;
                 });
                 orgList.value.unshift({'label': lan.value['全部机构'], 'value': ''});
+            }
+        }
+
+        const getPriceListDistinct = async () => {
+            const result = await supplierMS.getPriceListDistinct({'orgKey': orgKeyN.value});
+            if(result.status == 200){
+                let arr = [];
+                result.data.forEach((ele) => {
+                    arr.push({'label': '$'+ele, 'value': ''+ele});
+                });
+                priceList.value = arr;
+                priceList.value.unshift({'label': lan.value['全部价格'], 'value': ''});
             }
         }
 
@@ -520,6 +541,7 @@ export default {
             // takeStatusList.value = [
             //     {'label': lan.value['通过'], 'value': 7},
             // ];
+            getPriceListDistinct();
             getOrgList();
             getDataList();
         });
@@ -579,7 +601,7 @@ export default {
             changePage, page, pages, total, userRole, isAllSelect, admin, lan, sidebarW, addBillFoxx, imgNumberO, amountO, handlePatchVolumes,
             volumeNumber, genealogyName, takeStatus, takeStatusList, gcKey, volumeKey, checkAllBox, isShow, detail, closeSet, setDetail, saveSet,
             getHistory, isLeadImages, singleOrTwo, isLeadImagesList, singleOrTwoList, price, isSearch, getDataDownload, handleaddBill, showAddBill,
-            toBeSettledResidueTotalO, condition, conditionList, hasDeduction, hasDeductionList,
+            toBeSettledResidueTotalO, condition, conditionList, hasDeduction, hasDeductionList, priceList,
         }
     }
 }

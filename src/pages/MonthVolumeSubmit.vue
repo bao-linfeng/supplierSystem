@@ -55,7 +55,9 @@
             </el-table>
         </div>
         <!-- 可视化 -->
-        <EchartsModule v-if="isChart" :title="title" :subtitle="subtitle+' '+orgName" :chartData="chartData" v-on:close="isChart = false" />
+        <EchartsModule v-if="isChart && type == 1" :title="title" :subtitle="subtitle+' '+orgName" :chartData="chartData" v-on:close="isChart = false" />
+         <!-- 饼状图 -->
+         <Pie v-if="isChart && type == 2" :title="title" :subtitle="subtitle+' '+orgName" :chartData="chartData" v-on:close="isChart = false" />
     </div>
 </template>
 
@@ -67,10 +69,11 @@ import { getQueryVariable, getLocalTime, createMsg, getCurrentMonthZero, getDays
 import { supplierMS, org } from '../util/api';
 import ImageListModule from '../components/ImageListModule.vue';
 import EchartsModule from '../components/EchartsModule.vue';
+import Pie from '../components/Echarts/Pie.vue';
 
 export default {
     components: {
-        ImageListModule, EchartsModule,
+        ImageListModule, EchartsModule, Pie, 
     },
     name: 'MonthVolumeSubmit',
     props: ['id'],
@@ -167,12 +170,26 @@ export default {
                         waitCheckImageCountArr.push(ele.waitCheckImageCount);
                     }
                 });
-                chartDataO.data.push(submitImageCountArr); 
-                chartDataO.data.push(passImageCountArr); 
-                chartDataO.data.push(returnImageCountArr); 
-                chartDataO.data.push(tobeDiscussedImageCountArr); 
-                chartDataO.data.push(voidImageCountArr); 
-                chartDataO.data.push(waitCheckImageCountArr); 
+
+                if(type.value == 2){
+                    chartDataO.data = [
+                        {'value': passImageCount, 'name': lan.value['通过拍数(比率)']}, 
+                        // {'value': returnImageCount, 'name': lan.value['打回拍数(比率)']},
+                        {'value': tobeDiscussedImageCount, 'name': lan.value['待议拍数(比率)']}, 
+                        {'value': voidImageCount, 'name': lan.value['作废拍数(比率)']},
+                        {'value': waitCheckImageCount, 'name': lan.value['未审拍数(比率)']}, 
+                    ];
+                }else{
+                    chartDataO.data.push(submitImageCountArr); 
+                    chartDataO.data.push(passImageCountArr); 
+                    chartDataO.data.push(returnImageCountArr); 
+                    chartDataO.data.push(tobeDiscussedImageCountArr); 
+                    chartDataO.data.push(voidImageCountArr); 
+                    chartDataO.data.push(waitCheckImageCountArr); 
+                }
+
+                console.log(passImageCount+tobeDiscussedImageCount+voidImageCount+waitCheckImageCount)
+                
                 chartData.value = chartDataO;
             }else{
                 createMsg(result.msg);
@@ -236,6 +253,10 @@ export default {
             {'label': '按拍数', 'value': 1}, 
             {'label': '按比率', 'value': 2},
         ]);
+
+        watch(type, (nv, ov) => {
+            getDataList();
+        });
 
         const title = ref(lan.value['审核状态统计']);
         const subtitle = ref('');

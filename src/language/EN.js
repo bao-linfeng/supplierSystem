@@ -5,7 +5,8 @@ const EN = {
     '影像待结算': 'Image to paid',
     '家谱索引待审核': 'Index to audit',
     '家谱索引待结算': 'Index to paid',
-    '数据汇总': 'A Quick Summary (2029.09 - Present)',
+    '数据汇总': 'Data Summary',
+    '数据汇总(2022.9-至今)': 'A Quick Summary (2022.09 - Present)',
     '谱目总数': 'Total Jiapu Count',
     '总影像页数': 'Total Image Count',
     '影像总支出': 'Total Money to Pay',
@@ -502,6 +503,7 @@ const EN = {
     '待议条数': 'discussed %',
     '上传册数': 'Upload Volume',
     '影像页数': 'Images',
+    '全部价格': 'All Price',
 }
 
 export {
